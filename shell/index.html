@@ -41,6 +41,7 @@
 		var Module = {
 			arguments: ['/home/web_user/welcome.md'],
 			preRun: [function () {
+				ENV.LITE_SCALE = window.devicePixelRatio.toString();
 				FS.chdir('/home/web_user');
 				FS.writeFile('/home/web_user/welcome.md',
 					'# Welcome to Lite XL!\n\n' +
