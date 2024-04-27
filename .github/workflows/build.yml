@@ -57,9 +57,9 @@ jobs:
         run: |
           mkdir dist
           cp -R web/shell/index.html lite-xl/lite-xl.js lite-xl/lite-xl.wasm dist
-          python $EMSDK/upstream/emscripten/tools/file_packager.py bundle-data --preload lite-xl/data@/usr/share/lite-xl \
-            --js-output=bundle-data.js --no-force --use-preload-cache --no-node
-          cp bundle-data.js bundle-data.data dist
+          python $EMSDK/upstream/emscripten/tools/file_packager.py bundle.data --preload lite-xl/data@/usr/share/lite-xl \
+            --js-output=bundle.data.js --no-force --use-preload-cache --no-node
+          cp bundle.data.js bundle.data dist
       
       - name: Create Artifact
         uses: actions/upload-artifact@v4
