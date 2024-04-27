@@ -43,6 +43,7 @@ jobs:
           meson setup build --buildtype release -Dportable=true \
             --cross-file resources/cross/unknown-wasm32.txt \
             --cross-file ../cross/disable-pcre2-jit.txt
+          meson compile -C build
 
       - name: Package Portables
         run: |
