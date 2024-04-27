@@ -35,10 +35,9 @@
 		var Module = {
 			arguments: ['/home/web_user/welcome.md'],
 			preRun: [function () {
-                // yes, we're actually overriding the MACOS_RESOURCES envvar because LITE_PREFIX is not supported
-                // in older version of Lite XL. This is ironically the most stable way to achieve this.
-				ENV.MACOS_RESOURCES = '/usr/share/lite-xl';
-				FS.chdir('/home/web_user');
+				// workaround older lite-xl not supporting LITE_PREFIX
+				ENV.APPIMAGE = 'true'
+				ENV.OWD = '/home/web_user'
 				FS.writeFile('/home/web_user/welcome.md',
 					'# Welcome to Lite XL!\n\n' +
 					'This is an instance of Lite XL running on your browser using **JavaScript** and **WASM**.\n\n' +
