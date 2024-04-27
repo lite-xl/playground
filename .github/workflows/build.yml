@@ -38,11 +38,13 @@ jobs:
 
       - name: Build Portable
         run: |
+          cd lite-xl
           bash --version
           bash scripts/build.sh --debug --cross-platform unknown --cross-arch wasm32 --portable --release
 
       - name: Package Portables
         run: |
+          cd lite-xl
           bash scripts/package.sh --version ${INSTALL_REF} --debug --addons --binary --release
 
 
