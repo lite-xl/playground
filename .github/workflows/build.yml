@@ -48,6 +48,6 @@ jobs:
       - name: Package Portables
         run: |
           cd lite-xl
-          bash scripts/package.sh --version ${INSTALL_REF} --debug --addons --binary --release
+          bash scripts/package.sh --builddir build --version ${INSTALL_REF} --debug --addons --binary --release
 
 
