@@ -35,9 +35,7 @@
 		var Module = {
 			arguments: ['/home/web_user/welcome.md'],
 			preRun: [function () {
-				// workaround older lite-xl not supporting LITE_PREFIX
-				ENV.APPIMAGE = 'true'
-				ENV.OWD = '/home/web_user'
+				FS.chdir('/home/web_user');
 				FS.writeFile('/home/web_user/welcome.md',
 					'# Welcome to Lite XL!\n\n' +
 					'This is an instance of Lite XL running on your browser using **JavaScript** and **WASM**.\n\n' +
@@ -51,7 +49,8 @@
 				document.getElementById('loading').style.display = 'none';
 				document.getElementById('canvas').style.display = 'none';
 				document.getElementById('close').style.display = 'block';
-			}
+			},
+			thisProgram: '/usr/bin/lite-xl',
 		};
 
 		window.onload = function () {
