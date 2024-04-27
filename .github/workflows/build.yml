@@ -1,0 +1,48 @@
+name: GitHub Actions Demo
+on:
+    workflow_dispatch:
+        inputs:
+          version:
+            description: Release Version
+            default: v2.1.4
+            required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup environment variables
+        run: |
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+            echo "INSTALL_REF=${{ github.event.inputs.version }}" >> "$GITHUB_ENV"
+
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v14
+    
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+    
+      - name: Checkout Lite XL
+        uses: actions/checkout@v4
+        with:
+            repository: lite-xl/lite-xl
+            path: lite-xl
+        
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+            python-version: '3.x'
+    
+      - name: Install meson
+        run: pip install meson ninja
+
+      - name: Build Portable
+        run: |
+          bash --version
+          bash scripts/build.sh --debug --cross-platform unknown --cross-arch wasm32 --portable --release
+
+      - name: Package Portables
+        run: |
+          bash scripts/package.sh --version ${INSTALL_REF} --debug --addons --binary --release
+
+
