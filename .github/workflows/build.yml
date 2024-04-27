@@ -56,9 +56,8 @@ jobs:
       - name: Create distribution files
         run: |
           mkdir dist
-          find . -not -path '*/.*'
-          cp -R web/shell/index.html lite-xl/bin/lite-xl.js build/src/lite-xl.wasm dist
-          python $EMSDK/tools/file_packager.py bundle-data --preload lite-xl/share@/usr/share \
+          cp -R web/shell/index.html lite-xl/lite-xl.js lite-xl/lite-xl.wasm dist
+          python $EMSDK/tools/file_packager.py bundle-data --preload lite-xl/data@/usr/share/lite-xl \
             --js-output bundle-data.js --no-force --use-preload-cache --no-node
           cp bundle-data.js bundle-data.data dist
       
