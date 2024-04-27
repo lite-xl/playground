@@ -51,6 +51,7 @@ jobs:
       - name: Package Portables
         run: |
           cd lite-xl
-          bash scripts/package.sh --builddir build --version ${INSTALL_REF} --debug --addons --binary --release
+          # removing --release so it doesn't try to strip lite-xl.js
+          bash scripts/package.sh --builddir build --version ${INSTALL_REF} --debug --addons --binary
 
 
