@@ -27,6 +27,7 @@ jobs:
         with:
             repository: lite-xl/lite-xl
             path: lite-xl
+            ref: ${{ github.event.inputs.version }}
         
       - name: Setup Python
         uses: actions/setup-python@v5
