@@ -46,7 +46,7 @@ jobs:
         run: |
           meson setup build --buildtype release -Dportable=true \
             --cross-file resources/cross/unknown-wasm32.txt \
-            --cross-file ../cross/disable-pcre2-jit.txt
+            --cross-file web/cross/disable-pcre2-jit.txt
           meson compile -C build
 
       - name: Create Lite XL Package
