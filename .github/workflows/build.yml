@@ -40,8 +40,9 @@ jobs:
       - name: Build Portable
         run: |
           cd lite-xl
-          bash --version
-          bash scripts/build.sh --debug --cross-platform unknown --cross-arch wasm32 --portable --release
+          meson setup build --buildtype release -Dportable=true \
+            --cross-file resources/cross/unknown-wasm32.txt \
+            --cross-file ../cross/disable-pcre2-jit.txt
 
       - name: Package Portables
         run: |

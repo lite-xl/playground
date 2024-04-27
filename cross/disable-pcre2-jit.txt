@@ -1,0 +1,3 @@
+[pcre2:project options]
+jit = 'disabled'
+jit_sealloc = 'disabled'
