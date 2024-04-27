@@ -25,12 +25,13 @@ jobs:
     
       - name: Checkout this repository
         uses: actions/checkout@v4
+        with:
+          path: web
     
       - name: Checkout Lite XL
         uses: actions/checkout@v4
         with:
             repository: lite-xl/lite-xl
-            path: lite-xl
             ref: ${{ github.event.inputs.version }}
         
       - name: Setup Python
@@ -43,16 +44,25 @@ jobs:
 
       - name: Build Portable
         run: |
-          cd lite-xl
           meson setup build --buildtype release -Dportable=true \
             --cross-file resources/cross/unknown-wasm32.txt \
             --cross-file ../cross/disable-pcre2-jit.txt
           meson compile -C build
 
-      - name: Package Portables
+      - name: Create Lite XL Package
         run: |
-          cd lite-xl
-          # removing --release so it doesn't try to strip lite-xl.js
-          bash scripts/package.sh --builddir build --version ${INSTALL_REF} --debug --addons --binary
+          bash scripts/package.sh --builddir build --version ${INSTALL_REF} --debug --addons
 
-
+      - name: Create distribution files
+        run: |
+          mkdir dist
+          cp -R web/shell/index.html lite-xl/bin/lite-xl.js build/src/lite-xl.wasm dist
+          python $EMSDK/tools/file_packager.py bundle-data --preload lite-xl/share@/usr/share \
+            --js-output bundle-data.js --no-force --use-preload-cache --no-node
+          cp bundle-data.js bundle-data.data dist
+      
+      - name: Create Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: output
+          path: dist
