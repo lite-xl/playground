@@ -77,13 +77,14 @@ jobs:
         run: |
           bash scripts/package.sh --builddir build --version ${INSTALL_REF} --debug --addons
 
+      # the bundle file is called bundle.wasm to trick reverse proxies into compressing them
       - name: Create distribution files
         run: |
           mkdir dist
           cp -R web/shell/index.html lite-xl/lite-xl.js lite-xl/lite-xl.wasm dist
-          python $EMSDK/upstream/emscripten/tools/file_packager.py bundle.data --preload lite-xl/data@/usr/share/lite-xl \
-            --js-output=bundle.data.js --no-force --use-preload-cache --no-node
-          cp bundle.data.js bundle.data dist
+          python $EMSDK/upstream/emscripten/tools/file_packager.py bundle.wasm --preload lite-xl/data@/usr/share/lite-xl \
+            --js-output=bundle.wasm.js --no-force --use-preload-cache --no-node
+          cp bundle.wasm.js bundle.wasm dist
       
       - name: Create Artifact
         uses: actions/upload-pages-artifact@v3
