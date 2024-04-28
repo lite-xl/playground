@@ -35,16 +35,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Setup environment variables
-        run: |
-            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-
       # TODO: fix cache
       - name: Setup emsdk
         uses: mymindstorm/setup-emsdk@v14
         # with:
         #   version: 3.1.58
         #   actions-cache-folder: emsdk-cache
+
+      - name: Setup environment variables
+        run: |
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+            echo "$EMSDK/upstream/emscripten/tools" >> "$GITHUB_PATH"
     
       - name: Checkout this repository
         uses: actions/checkout@v4
