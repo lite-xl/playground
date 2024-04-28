@@ -2,7 +2,6 @@
 
 local config = require "core.config"
 local TitleView = require "core.titleview"
-local connector = require "libraries.connector"
 
 config.borderless = true
 
