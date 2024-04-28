@@ -25,8 +25,8 @@ show_help() {
     echo "                         Default: 'lite-xl'."
     echo "-a --addons              Package addons as well."
     echo "-o --output OUTPUTDIR    Sets the output path."
-    echo "-c --connector           Builds the connector."
     echo "                         Default: 'dist'."
+    echo "-c --connector           Builds the connector."
     echo "   --debug               Debug this script."
     echo "-h --help                Shows this message."
     echo
@@ -41,6 +41,8 @@ main() {
     local debug=""
     local ref=""
     local connector=""
+
+    set +u
 
     # shellcheck disable=SC2034
     for i in "$@"; do
@@ -87,6 +89,8 @@ main() {
         esac
     done
 
+    set -u
+    
     if [[ -n "${1:-}" ]]; then
         show_help
         exit 1
