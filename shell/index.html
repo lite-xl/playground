@@ -26,6 +26,12 @@
 			text-align: center;
 		}
 
+		canvas {
+			position: fixed;
+			top: 0;
+			left: 0;
+		}
+
 		.modal {
 			position: fixed;
 			top: 50%;
@@ -36,41 +42,17 @@
 		#close {
 			display: none;
 		}
-	</style>
-	<script type="application/javascript">
-		var Module = {
-			arguments: ['/home/web_user/welcome.md'],
-			preRun: [function () {
-				ENV.LITE_SCALE = window.devicePixelRatio.toString();
-				FS.chdir('/home/web_user');
-				FS.writeFile('/home/web_user/welcome.md',
-					'# Welcome to Lite XL!\n\n' +
-					'This is an instance of Lite XL running on your browser using **JavaScript** and **WASM**.\n\n' +
-					'There isn\'t a lot of things you can do here; you can **create, edit and save files**,\n' +
-					'but they _will not be persisted_ across different tabs / sessions.\n\n' +
-					'Not all plugins work, and **some keyboard shortcuts might not work** if your browser\n' +
-					'overrides them. Nevertheless, this is pretty cool.\n');
-				document.getElementById('loading').style.display = 'none';
-			}],
-			onExit: function () {
-				document.getElementById('loading').style.display = 'none';
-				document.getElementById('canvas').style.display = 'none';
-				document.getElementById('close').style.display = 'block';
-			},
-			thisProgram: '/usr/bin/lite-xl',
-		};
 
-		window.onload = function () {
-			// disable canvas right click
-			var canvas = document.getElementById('canvas');
-			var status = document.getElementById('status');
-			canvas.oncontextmenu = function (e) { e.preventDefault(); };
-			Module.canvas = canvas;
-			Module.setStatus = function (s) {
-				status.textContent = s;
-			};
-		};
-	</script>
+		#status {
+			position: fixed;
+			top: 0.2rem;
+			right: 0.2rem;
+			z-index: 2;
+			color: white;
+			mix-blend-mode: difference;
+		}
+	</style>
+	<script type="application/javascript" src="./js/main.js"></script>
     <script type="application/javascript" src="./bundle.wasm.js"></script>
     <script type="application/javascript" src="./lite-xl.js"></script>
 </head>
@@ -80,13 +62,14 @@
 	<div class="modal" id="loading">
 		<h2>Loading...</h2>
 		<p>Status: <span id="status">Unknown</span></p>
-		<p>If this page freezes, please check the console for any errors.</p>
+		<p>If this page freezes, please check the console (F12/Ctrl+Shift+I) for any errors.</p>
 	</div>
 	<div class="modal" id="close">
 		<h2>Oops, Lite XL is closed!</h2>
-		<p>If you didn't do this intentionally, please check the console for any errors.</p>
+		<p>If you didn't do this intentionally, please check the console (F12/Ctrl+Shift+I) for any errors.</p>
 		<p>You can refresh the page to load Lite XL again.</p>
 	</div>
+	<div id="status">Autosave: <span id="status_text">OK</span></div>
 	<noscript>
 		<p>You need to enable JavaScript and WASM for this page to work.</p>
 	</noscript>
