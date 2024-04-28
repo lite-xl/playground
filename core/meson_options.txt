@@ -1,0 +1,3 @@
+option('connector', type : 'feature', value : 'disabled', description : 'Compile and installs the C/JS connector.')
+option('wasm_core', type : 'feature', value : 'disabled', description : 'Installs the wasm core.')
+option('plugins', type : 'feature', value : 'enabled', description : 'Installs the plugins.')
