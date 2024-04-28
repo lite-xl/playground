@@ -38,7 +38,6 @@ jobs:
       - name: Setup environment variables
         run: |
             echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-            echo "INSTALL_REF=${{ github.event.inputs.version }}" >> "$GITHUB_ENV"
 
       # TODO: fix cache
       - name: Setup emsdk
@@ -46,17 +45,9 @@ jobs:
         # with:
         #   version: 3.1.58
         #   actions-cache-folder: emsdk-cache
-
-      - name: Checkout Lite XL
-        uses: actions/checkout@v4
-        with:
-            repository: lite-xl/lite-xl
-            ref: ${{ github.event.inputs.version }}
     
       - name: Checkout this repository
         uses: actions/checkout@v4
-        with:
-          path: web
         
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -66,25 +57,8 @@ jobs:
       - name: Install meson
         run: pip install meson ninja
 
-      - name: Build Portable
-        run: |
-          meson setup build --buildtype release -Dportable=true \
-            --cross-file resources/cross/unknown-wasm32.txt \
-            --cross-file web/cross/disable-pcre2-jit.txt
-          meson compile -C build
-
-      - name: Create Lite XL Package
-        run: |
-          bash scripts/package.sh --builddir build --version ${INSTALL_REF} --debug --addons
-
-      # the bundle file is called bundle.wasm to trick reverse proxies into compressing them
-      - name: Create distribution files
-        run: |
-          mkdir dist
-          cp web/shell/index.html web/shell/favicon.png lite-xl/lite-xl.js lite-xl/lite-xl.wasm dist
-          python $EMSDK/upstream/emscripten/tools/file_packager.py bundle.wasm --preload lite-xl/data@/usr/share/lite-xl \
-            --js-output=bundle.wasm.js --no-force --use-preload-cache --no-node
-          cp bundle.wasm.js bundle.wasm dist
+      - name: Build
+        run: bash build.sh --connector --ref ${{ github.event.inputs.version }}
       
       - name: Create Artifact
         uses: actions/upload-pages-artifact@v3
