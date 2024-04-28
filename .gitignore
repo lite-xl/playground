@@ -1,0 +1,8 @@
+dist
+
+# build dirs
+core/.cache
+core/build
+core/install
+
+lite-xl
