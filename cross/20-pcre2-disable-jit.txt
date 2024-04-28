@@ -1,3 +1,6 @@
+# This cross file disables JIT for pcre2
+
+
 [pcre2:project options]
 jit = 'disabled'
 jit_sealloc = 'disabled'

@@ -1,0 +1,33 @@
+# cross file for WASM.
+# use this file by running meson setup --cross-file resources/cross/wasm.txt <builddir>
+
+[constants]
+
+# a list of functions that can run without being asyncified; proceed with caution
+asyncify_ignores = '["SDL_BlitScaled","SDL_UpperBlitScaled","SDL_MapRGB*","SDL_FillRect","SDL_FreeSurface","SDL_CreateRGBSurface","SDL_GetWindowSurface","SDL_PollEvent","SDL_CreateSystemCursor","SDL_SetWindowTitle","SDL_SetCursor","SDL_GetWindowSize","SDL_GetWindowPosition","lua_push*","lua_rawget*","luaL_check*","pcre2*","FT_*","Bezier_*","g_*","FT_*","ft_*","TT_*","tt_*","__*","*printf","gray_*","fopen","fclose","fread","fflush","qsort","sift"]'
+
+# enable advising for optimizing the list above; disable this to prevent flooding logs
+asyncify_advise = '0'
+
+# stack size for asyncify; increase this if you have problems with crashes
+asyncify_stack_size = '15386'
+
+# initial heap size in bytes; make sure it is not too low (around 64mb - 250mb)
+initial_heap = '104857600'
+
+# The memory allocator to use. You shouldn't need to change this,
+# but other allocator might offer more performance at the cost of binary size.
+malloc_impl = 'emmalloc'
+
+# Functions exported by the main module
+exported_functions = ''
+
+
+[project options]
+buildtype = 'release'
+portable = true
+arch_tuple = 'wasm32-unknown'
+wrap_mode = 'nofallback'
+force_fallback_for = 'lua,pcre2,freetype2'
+c_args = ['-fPIC']
+c_link_args = ['-sALLOW_MEMORY_GROWTH=1', '-sINITIAL_MEMORY=' + initial_heap, '-sASYNCIFY', '-sASYNCIFY_ADVISE=' + asyncify_advise, '-sASYNCIFY_STACK_SIZE=' + asyncify_stack_size, '-sASYNCIFY_REMOVE=' + asyncify_ignores, '-sFORCE_FILESYSTEM=1', '-lidbfs.js', '-sEXIT_RUNTIME=1', '-sMALLOC=' + malloc_impl, '-sMAIN_MODULE=2', '-sEXPORTED_FUNCTIONS=' + exported_functions, '-sINCLUDE_FULL_LIBRARY']

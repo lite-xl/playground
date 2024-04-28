@@ -1,0 +1,8 @@
+# This cross file is used to compile side modules that can be loaded into Lite XL.
+
+[built-in options]
+buildtype = 'release'
+c_args = ['-sSIDE_MODULE=2']
+c_link_args = ['-sSIDE_MODULE=2', '-sASYNCIFY']
+cpp_args = []
+cpp_link_args = []

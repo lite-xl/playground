@@ -1,0 +1,37 @@
+# This cross file sets up meson to use emcc.
+
+
+[constants]
+# Emscripten is not always added to PATH.
+# Replace this variable with the path to Emscripten;
+# or supply a second machine file that defines this variable.
+toolchain = ''
+
+
+[binaries]
+c = toolchain / 'emcc'
+cpp = toolchain / 'em++'
+ar = toolchain / 'emar'
+strip = toolchain / 'emstrip'
+cmake = [toolchain / 'emmake', 'cmake']
+pkg-config = [toolchain / 'emconfigure', 'pkg-config']
+sdl2-config = [toolchain / 'emconfigure', 'sdl2-config']
+file_packager = ['python3', toolchain / 'tools/file_packager.py']
+
+
+[properties]
+needs_exe_wrapper = true
+
+
+[built-in options]
+c_args = []
+c_link_args = []
+cpp_args = []
+cpp_link_args = []
+
+
+[host_machine]
+system = 'emscripten'
+cpu_family = 'wasm32'
+cpu = 'wasm32'
+endian = 'little'
