@@ -6,7 +6,6 @@ local TitleView = require "core.titleview"
 config.borderless = true
 
 function TitleView:draw_window_controls()
-    connector.eval_js("console.log('test'); return ''")
 end
 
 function TitleView:on_mouse_left()
