@@ -46,6 +46,7 @@ jobs:
         run: |
             echo "$HOME/.local/bin" >> "$GITHUB_PATH"
             echo "$EMSDK/upstream/emscripten/tools" >> "$GITHUB_PATH"
+            echo "$EMSDK/upstream/bin" >> "$GITHUB_PATH"
     
       - name: Checkout this repository
         uses: actions/checkout@v4
