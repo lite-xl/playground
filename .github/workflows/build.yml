@@ -64,7 +64,7 @@ jobs:
       - name: Minify
         uses: docker://tdewolff/minify
         with:
-          run: minify -r dist
+          run: minify -r -o dist/ dist/
 
       - name: Create Artifact
         uses: actions/upload-pages-artifact@v3
