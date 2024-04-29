@@ -61,6 +61,11 @@ jobs:
       - name: Build
         run: bash build.sh --connector --plugins --ref ${{ github.event.inputs.version }}
 
+      - name: Minify
+        uses: docker://tdewolff/minify
+        with:
+          run: minify -r dist
+
       - name: Create Artifact
         uses: actions/upload-pages-artifact@v3
         with:
