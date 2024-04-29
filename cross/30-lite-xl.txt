@@ -22,6 +22,8 @@ malloc_impl = 'emmalloc'
 # Functions exported by the main module
 exported_functions = ''
 
+# Extra link options that can be overridden by other cross files.
+extra_link_options = []
 
 [project options]
 buildtype = 'release'
@@ -30,4 +32,4 @@ arch_tuple = 'wasm32-unknown'
 wrap_mode = 'nofallback'
 force_fallback_for = 'lua,pcre2,freetype2'
 c_args = ['-fPIC']
-c_link_args = ['-sALLOW_MEMORY_GROWTH=1', '-sINITIAL_MEMORY=' + initial_heap, '-sASYNCIFY', '-sASYNCIFY_ADVISE=' + asyncify_advise, '-sASYNCIFY_STACK_SIZE=' + asyncify_stack_size, '-sASYNCIFY_REMOVE=' + asyncify_ignores, '-sFORCE_FILESYSTEM=1', '-lidbfs.js', '-sEXIT_RUNTIME=1', '-sMALLOC=' + malloc_impl, '-sMAIN_MODULE=2', '-sEXPORTED_FUNCTIONS=' + exported_functions, '-sINCLUDE_FULL_LIBRARY']
+c_link_args = ['-sALLOW_MEMORY_GROWTH=1', '-sINITIAL_MEMORY=' + initial_heap, '-sASYNCIFY', '-sASYNCIFY_ADVISE=' + asyncify_advise, '-sASYNCIFY_STACK_SIZE=' + asyncify_stack_size, '-sASYNCIFY_REMOVE=' + asyncify_ignores, '-sFORCE_FILESYSTEM=1', '-lidbfs.js', '-sEXIT_RUNTIME=1', '-sMALLOC=' + malloc_impl, '-sMAIN_MODULE=2', '-sEXPORTED_FUNCTIONS=' + exported_functions] + extra_link_options
