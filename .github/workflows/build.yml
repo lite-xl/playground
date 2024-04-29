@@ -38,8 +38,8 @@ jobs:
       # TODO: fix cache
       - name: Setup emsdk
         uses: mymindstorm/setup-emsdk@v14
-        # with:
-        #   version: 3.1.58
+        with:
+          version: 3.1.57
         #   actions-cache-folder: emsdk-cache
 
       - name: Setup environment variables

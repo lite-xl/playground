@@ -27,7 +27,7 @@ generate_list() {
 
 output="$1"; shift
 
-list="_main,setTempRet0,getTempRet0,$(generate_list "$@" | tr '\n' ',')"
+list="_main,$(generate_list "$@" | tr '\n' ',')"
 list="${list%,*}"
 
 cat << EOF > "$output"
