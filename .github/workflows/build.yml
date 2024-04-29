@@ -49,6 +49,10 @@ jobs:
     
       - name: Checkout this repository
         uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.2'
         
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -62,9 +66,9 @@ jobs:
         run: bash build.sh --connector --plugins --ref ${{ github.event.inputs.version }}
 
       - name: Minify
-        uses: docker://tdewolff/minify
-        with:
-          run: minify -r -o dist/ dist/
+        run: |
+          go install github.com/tdewolff/minify/v2/cmd/minify@latest
+          minify -r -o dist/ dist/
 
       - name: Create Artifact
         uses: actions/upload-pages-artifact@v3
