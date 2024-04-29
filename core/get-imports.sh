@@ -4,11 +4,13 @@
 # - memory and table imports
 # - get/setTempRet0 (those are exported by JS)
 # - __asyncjs calls (those are also exported by JS)
+# - idbsync* (my function)
 read -r -d '' awk_command <<'EOF'
 {
     if ($1 == "(import"
         && $4 !~ /\((memory|table)/
         && $3 !~ /^"(get|set)TempRet0/
+        && $3 !~ /^"idbsync/
         && $3 !~ /^"__asyncjs/) {
         print "_" substr($3, 2, length($3)-2)
     }
