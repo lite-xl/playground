@@ -1,5 +1,7 @@
 --mod-version:3
 
+-- This plugin enables borderless mode and hides the window controls
+
 local config = require "core.config"
 local TitleView = require "core.titleview"
 
@@ -15,7 +17,6 @@ end
 function TitleView:on_mouse_pressed(...)
     TitleView.super.on_mouse_pressed(self, ...)
 end
-
 
 function TitleView:on_mouse_moved(px, py, ...)
     TitleView.super.on_mouse_moved(self, px, py, ...)
