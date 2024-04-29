@@ -59,8 +59,8 @@ jobs:
         run: pip install meson ninja
 
       - name: Build
-        run: bash build.sh --connector --ref ${{ github.event.inputs.version }}
-      
+        run: bash build.sh --connector --plugins --ref ${{ github.event.inputs.version }}
+
       - name: Create Artifact
         uses: actions/upload-pages-artifact@v3
         with:

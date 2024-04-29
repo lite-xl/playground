@@ -19,16 +19,22 @@ show_help() {
     echo
     echo "-b --builddir DIRNAME    Sets the name of the build directory."
     echo "                         Default: 'build'."
+    echo "-o --output OUTPUTDIR    Sets the output path."
+    echo "                         Default: 'dist'."
+    echo "   --debug               Debug this script."
+    echo "-h --help                Shows this message."
+    echo
+    echo "Lite XL options:"
     echo "-r --ref REF             Sets the Lite XL ref to check out."
     echo "                         Default: latest tag."
     echo "-x --xldir DIRNAME       Sets the path to Lite XL."
     echo "                         Default: 'lite-xl'."
     echo "-a --addons              Package addons as well."
-    echo "-o --output OUTPUTDIR    Sets the output path."
-    echo "                         Default: 'dist'."
+    echo
+    echo "Plugins options:"
     echo "-c --connector           Builds the connector."
-    echo "   --debug               Debug this script."
-    echo "-h --help                Shows this message."
+    echo "-p --plugins             Installs the plugins for better web browser integration."
+    echo "-w --wasm-core           Installs extra hooks."
     echo
 }
 
@@ -40,22 +46,34 @@ main() {
     local addons=""
     local debug=""
     local ref=""
-    local connector=""
+    
+    local connector="disabled"
+    local extra_plugins="disabled"
+    local wasm_core="disabled"
 
-    set +u
-
-    # shellcheck disable=SC2034
-    for i in "$@"; do
+    while [[ $# -gt 0 ]]; do
         case "$1" in
-            -h|--help)
-                show_help
-                exit 0
-                ;;
+
             -b|--builddir)
                 builddir="$2"
                 shift
                 shift
                 ;;
+            -o|--output)
+                output="$2"
+                shift
+                shift
+                ;;
+            --debug)
+                set -x
+                debug="--debug"
+                shift
+                ;;
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+
             -r|--ref)
                 ref="$2"
                 shift
@@ -70,27 +88,25 @@ main() {
                 addons="--addons"
                 shift
                 ;;
-            -o|--output)
-                output="$2"
-                shift
-                shift
-                ;;
+
             -c|--connector)
-                connector="true"
+                connector="enabled"
                 shift
                 ;;
-            --debug)
-                set -x
-                debug="--debug"
+            -p|--plugins)
+                extra_plugins="enabled"
                 shift
                 ;;
+            -w|--wasm-core)
+                wasm_core="enabled"
+                shift
+                ;;
+
             *)
                 ;;
         esac
     done
 
-    set -u
-    
     if [[ -n "${1:-}" ]]; then
         show_help
         exit 1
@@ -110,34 +126,34 @@ main() {
     fi
 
 
+    # checkout lite-xl to correct version
     pushd "$xldir"
     if [[ -z "$ref" ]]; then
         ref="$(git describe --tags "$(git rev-list --tags --max-count=1)")"
     fi
 
-    # checkout to correct version
     if ! git checkout "$ref"; then
         echo "warning: cannot check out, you are on your own"
     fi
     popd
 
+    pushd core
+    meson setup build --reconfigure \
+        -Dconnector=$connector \
+        -Dplugins=$extra_plugins \
+        -Dwasm_core=$wasm_core \
+        --cross-file "$rootdir/cross/10-emcc.txt" \
+        --cross-file "$rootdir/cross/25-side-module.txt"
 
-    # compile connector, because we need the cross file
-    if [[ $connector = true ]]; then
-        pushd core
-        if ! [[ -d "build" ]]; then
-            meson setup build \
-                --cross-file "$rootdir/cross/10-emcc.txt" \
-                --cross-file "$rootdir/cross/25-side-module.txt"
-        fi
-        
-        meson install -C build --destdir ../install
-        popd
+    if [[ -d install ]]; then
+        rm -r install
     fi
+    meson install -C build --destdir ../install
+    popd
 
     # compile lite-xl
     pushd "$xldir"
-    if [[ $connector = true ]] && ! cmp "$rootdir/core/install/99-exported-functions.txt" "$builddir/99-exported-functions.txt" >/dev/null 2>&1; then
+    if [[ $connector = enabled ]] && ! cmp "$rootdir/core/install/99-exported-functions.txt" "$builddir/99-exported-functions.txt" >/dev/null 2>&1; then
         if [[ -d "$builddir" ]]; then
             # different cross file, rebuild
             rm -rf "$builddir"
@@ -152,12 +168,10 @@ main() {
             cross_files+=("--cross-file" "$f")
         done
 
-        if [[ $connector == true ]]; then
-            # TODO: fix this
-            # for f in "$rootdir/core/install/"*.txt; do
-            #     cross_files+=("--cross-file" "$f")
-            # done
-            :
+        if [[ $connector = enabled ]]; then
+            for f in "$rootdir/core/install/"*.txt; do
+                cross_files+=("--cross-file" "$f")
+            done
         fi
 
         # configure
@@ -166,26 +180,21 @@ main() {
             "${cross_files[@]}"
         
         # copy cross file over to keep track of settings
-        if [[ $connector == true ]]; then
-            # TODO: fix this
-            # cp "$rootdir/core/install/99-exported-functions.txt" "$builddir/99-exported-functions.txt"
-            :
+        if [[ $connector ==  enabled ]]; then
+            cp "$rootdir/core/install/99-exported-functions.txt" "$builddir/99-exported-functions.txt"
         fi
     fi
 
     # package
     bash scripts/package.sh --builddir "$builddir" --addons $debug $addons
 
-    # copy connector over
-    if [[ $connector == true ]]; then
-        # TODO: fix this
-        cp -r "$rootdir/core/install/data/." "lite-xl/data"
-        :
-    fi
+    # copy core over
+    cp -r "$rootdir/core/install/data/." "lite-xl/data"
 
     # create data bundle
     # sidenote: the file extension is set to wasm to trick reverse proxies to compress it
     file_packager bundle.wasm --preload lite-xl/data@/usr/share/lite-xl \
+        --preload "$rootdir/welcome.md@/usr/share/lite-xl/welcome.md" \
         --js-output=bundle.wasm.js --use-preload-cache --no-node --no-force \
         --use-preload-plugins --quiet
 
