@@ -3,23 +3,25 @@
 
 [constants]
 
-# a list of functions that can run without being asyncified; proceed with caution
+# A list of functions that can run without being asyncified; proceed with caution
 asyncify_ignores = '["SDL_BlitScaled","SDL_UpperBlitScaled","SDL_MapRGB*","SDL_FillRect","SDL_FreeSurface","SDL_CreateRGBSurface","SDL_GetWindowSurface","SDL_PollEvent","SDL_CreateSystemCursor","SDL_SetWindowTitle","SDL_SetCursor","SDL_GetWindowSize","SDL_GetWindowPosition","lua_push*","lua_rawget*","luaL_check*","pcre2*","FT_*","Bezier_*","g_*","FT_*","ft_*","TT_*","tt_*","__*","*printf","gray_*","fopen","fclose","fread","fflush","qsort","sift"]'
 
-# enable advising for optimizing the list above; disable this to prevent flooding logs
+# Enable advising for optimizing the list above; disable this to prevent flooding logs
 asyncify_advise = '0'
 
-# stack size for asyncify; increase this if you have problems with crashes
+# Stack size for asyncify; increase this if you have problems with crashes
 asyncify_stack_size = '15386'
 
-# initial heap size in bytes; make sure it is not too low (around 64mb - 250mb)
+# Initial heap size in bytes; make sure it is not too low (around 64mb - 250mb)
 initial_heap = '104857600'
 
 # The memory allocator to use. You shouldn't need to change this,
 # but other allocator might offer more performance at the cost of binary size.
 malloc_impl = 'emmalloc'
 
-# Functions exported by the main module
+# Functions exported by the main module.
+# This is needed if you plan to load shared libraries which might use symbols from the main binary,
+# e.g. stdout, stderr, fopen, etc. Use another cross file to override this value.
 exported_functions = ''
 
 # Extra link options that can be overridden by other cross files.
