@@ -7,12 +7,22 @@ You can **create, edit and save files** with the editor and store them in
 your browser. All data is stored in [IndexedDB][3] and restored when you
 refresh the page or reopen the website in the **same browser** in the future.
 
-# Autosave
+# Autosync
 
 This website automatically saves all the changes in the home folder
 (`web_user`) every 5 seconds. You can configure the details in Settings.
 If you close the page before the changes are saved, **your data will be lost.**
 **Do not close the tab** if you see `Autosave: Saving...` on the top right corner.
+
+# Upload Files
+
+You can also upload files from your device and edit it here. To do this,
+press `ctrl+shift+p` and enter `wasm:upload-files`. You will be prompted with
+the destination directory. After entering the destination directory,
+you can choose the files that you want to upload.
+
+To upload directories, you can use `wasm:upload-directory`
+instead of `wasm:upload-files`. Note that empty directories will not be uploaded.
 
 # Privacy and Security
 
