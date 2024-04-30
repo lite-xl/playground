@@ -116,7 +116,7 @@ main() {
     # if not, try to get it from emsdk
     if ! type -p emcc >/dev/null || ! type -p file_packager >/dev/null || ! type -p wasm-dis >/dev/null; then
         echo "emcc and tools not found, sourcing from emsdk"
-        if ! type -p emsdk; then
+        if ! type -p emsdk >/dev/null; then
             echo "error: cannot find emsdk"
             exit 1
         fi
@@ -218,6 +218,11 @@ main() {
 
     # package
     bash scripts/package.sh --builddir "$builddir" --addons $debug $addons
+
+    # remove the workspace plugin because we have our own?
+    if [[ -e "lite-xl/data/plugins/workspace.lua" ]]; then
+        rm "lite-xl/data/plugins/workspace.lua"
+    fi
 
     # copy core over
     cp -r "$rootdir/core/install/data/." "lite-xl/data"
