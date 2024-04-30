@@ -221,7 +221,7 @@ var Module = {
             .filter((f) => f.webkitRelativePath !== "")
             .map((f) => {
               const segments = pathSegments(f.webkitRelativePath);
-              return segments[segments.length - 2];
+              return `${dest}/${segments[segments.length - 2]}`;
             }),
         ).forEach(mkdirp);
 
