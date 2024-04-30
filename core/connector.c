@@ -31,8 +31,7 @@ EM_ASYNC_JS(char *, file_upload, (char *dest, int dir), {
 })
 
 static int f_idbsync_set_interval(lua_State *L) {
-  int interval = luaL_checkinteger(L, 1);
-  EM_ASM({ Module.idbSync.setInterval($0); }, interval);
+  EM_ASM({ Module.idbSync.setInterval($0); }, (int) luaL_checkinteger(L, 1));
   return 0;
 }
 
@@ -42,8 +41,7 @@ static int f_idbsync_get_interval(lua_State *L) {
 }
 
 static int f_idbsync_set_auto_sync(lua_State *L) {
-  int enabled = lua_toboolean(L, 1);
-  EM_ASM({ Module.idbSync.setAutoSync(!!$0); }, enabled);
+  EM_ASM({ Module.idbSync.setAutoSync(!!$0); }, (int) lua_toboolean(L, 1));
   return 0;
 }
 
@@ -77,8 +75,7 @@ static int f_idbsync_save(lua_State *L) {
 }
 
 static int f_idbsync_save_debounced(lua_State *L) {
-  int debounceTime = luaL_checkinteger(L, 1);
-  EM_ASM({ Module.idbSync.saveDebounced($0) }, debounceTime);
+  EM_ASM({ Module.idbSync.saveDebounced($0); }, (int) luaL_checkinteger(L, 1));
   return 0;
 }
 
