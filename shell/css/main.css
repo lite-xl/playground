@@ -39,11 +39,45 @@ canvas {
   display: none;
 }
 
-#status {
+.sync_indicator {
   position: fixed;
-  top: 0.2rem;
-  right: 0.2rem;
-  z-index: 2;
-  color: white;
-  mix-blend-mode: difference;
+  right: 4px;
+  top: 4px;
+  z-index: 10;
+}
+
+.sync_indicator svg {
+  vertical-align: top;
+}
+
+.sync_indicator .sync_anim {
+  animation: sync_spin 1.2s infinite;
+  animation-fill-mode: forwards;
+}
+
+@keyframes sync_spin {
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+.sync_indicator td {
+  vertical-align: baseline;
+}
+
+.sync_indicator td p {
+  margin: 0 auto;
+  text-align: right;
+}
+
+.sync_indicator.status {
+  position: relative;
+  visibility: hidden;
+  background-color: whitesmoke;
+  padding: 0.5rem;
+  vertical-align: top;
+}
+
+.sync_indicator:hover .status {
+  visibility: visible;
 }

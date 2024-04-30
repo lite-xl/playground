@@ -84,6 +84,11 @@ static int f_idbsync_stop(lua_State *L) {
   return 0;
 }
 
+static int f_idbsync_set_workspace_sync_status(lua_State *L) {
+  EM_ASM({ Module.idbSync.setWorkspaceSyncStatus(UTF8ToString($0)); }, (char *) luaL_checkstring(L, 1));
+  return 0;
+}
+
 static int f_upload_files(lua_State *L) {
   char *result = file_upload((char *) luaL_checkstring(L, 1), lua_toboolean(L, 2));
   // the function returns 0 as the first character if an error occured
@@ -107,6 +112,7 @@ static luaL_Reg lib[] = {
   { "idbsync_save", f_idbsync_save },
   { "idbsync_save_debounced", f_idbsync_save_debounced },
   { "idbsync_stop", f_idbsync_stop },
+  { "idbsync_set_workspace_sync_status", f_idbsync_set_workspace_sync_status },
   { "upload_files", f_upload_files },
   { NULL, NULL },
 };

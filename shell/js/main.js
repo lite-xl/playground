@@ -46,6 +46,10 @@ var Module = {
       this.queue = [];
       this.seq = 0;
       this.running = false;
+      this.syncStatus = {
+        files: { status: "Ready", time: new Date() },
+        workspace: { status: "Ready", time: new Date() },
+      };
     }
 
     /**
@@ -134,32 +138,59 @@ var Module = {
         return this.start();
       }
       const [id, res, rej] = this.queue.shift();
-      this.setStatus("Saving...");
+      this.setFileSyncStatus("Syncing...");
+      // add an animation
+      document.getElementById("sync_icon").classList.add("sync_anim");
       try {
         this.running = true;
         await new Promise((res, rej) =>
           FS.syncfs((e) => (e ? rej(e) : res(e))),
         );
-        this.setStatus(`Saved at ${new Date().toLocaleTimeString()}`);
+        this.setFileSyncStatus("Synced.");
         console.log("Save completed, ID: ", id);
         res();
       } catch (e) {
-        this.setStatus("Cannot sync. Please check your console.");
+        this.setFileSyncStatus("Cannot sync. Please check your console.");
         console.error("syncfs() failed:", e);
         rej(e);
+      } finally {
+        document.getElementById("sync_icon").classList.remove("sync_anim");
       }
       // technically we have TCO, but it really dont exist.
       return this.execQueue();
     }
 
     /**
-     * Sets the status text in the top-right corner.
+     * Sets file sync status.
      * @param {string} msg The message.
      */
-    setStatus(msg) {
-      if (!this.statusText)
-        this.statusText = document.getElementById("status_text");
-      this.statusText.textContent = `Sync: ${msg}`;
+    setFileSyncStatus(msg) {
+      this.syncStatus.files.status = msg;
+      this.syncStatus.files.time = new Date();
+      this.updateStatus();
+    }
+
+    /**
+     * Sets the workspace sync status.
+     * @param {string} msg The message.
+     */
+    setWorkspaceSyncStatus(msg) {
+      this.syncStatus.workspace.status = msg;
+      this.syncStatus.workspace.time = new Date();
+      this.updateStatus();
+    }
+
+    /**
+     * Updates the status text.
+     */
+    updateStatus() {
+      document.getElementById("file_sync_status").textContent = `Files: ${
+        this.syncStatus.files.status
+      } (${this.syncStatus.files.time.toLocaleTimeString()})`;
+      document.getElementById("workspace_sync_status").textContent =
+        `Workspace: ${
+          this.syncStatus.workspace.status
+        } (${this.syncStatus.workspace.time.toLocaleTimeString()})`;
     }
 
     /**
