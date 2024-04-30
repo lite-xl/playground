@@ -57,7 +57,7 @@ static int f_idbsync_save_debounced(lua_State *L) {
   return 0;
 }
 
-static int f_idbsync_stop() {
+static int f_idbsync_stop(lua_State *L) {
   EM_ASM({ Module.idbSync.stop(); });
   return 0;
 }
