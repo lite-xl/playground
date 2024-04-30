@@ -26,10 +26,12 @@ var Module = {
    * @param {string} dir The directory.
    */
   function mkdirp(dir) {
-    try {
-      pathSegments(dir).forEach((d) => FS.mkdir(d));
-    } catch (e) {
-      if (e.code !== "EEXIST") throw e;
+    for (const segment of pathSegments(dir)) {
+      try {
+        FS.mkdir(segment);
+      } catch (e) {
+        if (e.code !== "EEXIST") throw e;
+      }
     }
   }
 
