@@ -1,5 +1,6 @@
 var Module = {
   preRun: [],
+  arguments: [],
 };
 (() => {
   "use strict";
@@ -250,7 +251,6 @@ var Module = {
     }
   };
 
-  Module.arguments = ["/usr/share/lite-xl/welcome.md"];
   Module.thisProgram = "/usr/bin/lite-xl";
   Module.noInitialRun = true;
   Module.preRun.push(() => {
