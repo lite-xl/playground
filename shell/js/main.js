@@ -17,8 +17,8 @@ var Module = {
     if (segments[segments.length - 1] === ".") segments.pop();
 
     return segments.map(
-        (x, i, a) =>
-          a.slice(0, i + 1).join("/") + (x === "" ? "/" : ""));
+      (x, i, a) => a.slice(0, i + 1).join("/") + (x === "" ? "/" : ""),
+    );
   }
 
   /**
