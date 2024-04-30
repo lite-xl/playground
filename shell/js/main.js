@@ -16,7 +16,7 @@ var Module = {
       .map((x, i) => (x === "" ? (i === 0 ? "" : ".") : x))
       .map(
         (_, i, a) =>
-          a.slice(0, i + 1).join("/") + (i === a.length - 1 ? "" : "/")
+          a.slice(0, i + 1).join("/") + (i === a.length - 1 ? "" : "/"),
       );
   }
 
@@ -81,7 +81,7 @@ var Module = {
      */
     start() {
       console.log(
-        `IDBSync autosync: ${this.autoSync}, interval: ${this.saveInterval}`
+        `IDBSync autosync: ${this.autoSync}, interval: ${this.saveInterval}`,
       );
       this.stop();
       if (!this.autoSync) return;
@@ -96,7 +96,7 @@ var Module = {
       const id = this.seq++;
       console.log("Save ID: ", id);
       const promise = new Promise((res, rej) =>
-        this.queue.push([id, res, rej])
+        this.queue.push([id, res, rej]),
       );
       this.execQueue();
       return promise;
@@ -114,7 +114,7 @@ var Module = {
       return new Promise((res, rej) => {
         this.debounceTimer = setTimeout(
           () => this.save().then(res).catch(rej),
-          debouncePeriod
+          debouncePeriod,
         );
       });
     }
@@ -131,7 +131,7 @@ var Module = {
       this.setStatus("Saving...");
       try {
         await new Promise((res, rej) =>
-          FS.syncfs((e) => (e ? rej(e) : res(e)))
+          FS.syncfs((e) => (e ? rej(e) : res(e))),
         );
         this.setStatus(`Saved at ${new Date().toLocaleTimeString()}`);
         console.log("Save completed, ID: ", id);
@@ -222,7 +222,7 @@ var Module = {
             .map((f) => {
               const segments = pathSegments(f.webkitRelativePath);
               return segments[segments.length - 2];
-            })
+            }),
         ).forEach(mkdirp);
 
         // create the files

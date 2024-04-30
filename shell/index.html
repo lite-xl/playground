@@ -1,44 +1,44 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta http-equiv="x-ua-compatible" content="ie=edge" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<link rel="icon" type="image/png" href="./favicon.png" sizes="128x128" />
-		<title>Lite XL</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="./favicon.png" sizes="128x128" />
+    <title>Lite XL</title>
 
-		<meta property="og:title" content="Try Lite XL" />
-		<meta property="og:url" content="https://lite-xl.com/playground" />
-		<meta property="og:site_name" content="Lite XL" />
-		<meta property="og:description" content="Try Lite XL in your Browser!" />
+    <meta property="og:title" content="Try Lite XL" />
+    <meta property="og:url" content="https://lite-xl.com/playground" />
+    <meta property="og:site_name" content="Lite XL" />
+    <meta property="og:description" content="Try Lite XL in your Browser!" />
 
-		<link rel="stylesheet" href="./css/main.css" />
-		<script type="application/javascript" src="./js/main.js"></script>
-		<script type="application/javascript" src="./bundle.wasm.js"></script>
-		<script type="application/javascript" src="./lite-xl.js"></script>
-	</head>
+    <link rel="stylesheet" href="./css/main.css" />
+    <script type="application/javascript" src="./js/main.js"></script>
+    <script type="application/javascript" src="./bundle.wasm.js"></script>
+    <script type="application/javascript" src="./lite-xl.js"></script>
+  </head>
 
-	<body>
-		<canvas id="canvas"></canvas>
-		<div class="modal" id="loading">
-			<h2>Loading...</h2>
-			<p>Status: <span id="status">Unknown</span></p>
-			<p>
-				If this page freezes, please check the console (F12/Ctrl+Shift+I) for
-				any errors.
-			</p>
-		</div>
-		<div class="modal" id="close">
-			<h2>Oops, Lite XL is closed!</h2>
-			<p>
-				If you didn't do this intentionally, please check the console
-				(F12/Ctrl+Shift+I) for any errors.
-			</p>
-			<p>You can refresh the page to load Lite XL again.</p>
-		</div>
-		<div id="status"><span id="status_text"></span></div>
-		<noscript>
-			<p>You need to enable JavaScript and WASM for this page to work.</p>
-		</noscript>
-	</body>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div class="modal" id="loading">
+      <h2>Loading...</h2>
+      <p>Status: <span id="status">Unknown</span></p>
+      <p>
+        If this page freezes, please check the console (F12/Ctrl+Shift+I) for
+        any errors.
+      </p>
+    </div>
+    <div class="modal" id="close">
+      <h2>Oops, Lite XL is closed!</h2>
+      <p>
+        If you didn't do this intentionally, please check the console
+        (F12/Ctrl+Shift+I) for any errors.
+      </p>
+      <p>You can refresh the page to load Lite XL again.</p>
+    </div>
+    <div id="status"><span id="status_text"></span></div>
+    <noscript>
+      <p>You need to enable JavaScript and WASM for this page to work.</p>
+    </noscript>
+  </body>
 </html>
