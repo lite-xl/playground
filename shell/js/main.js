@@ -172,23 +172,20 @@ var Module = {
   Module.idbSync = new IDBSync();
 
   /**
-   * Reads a file and write it to somewhere.
+   * Reads a file and write it to the filesystem.
    * @param {File} file The file to read.
    * @returns {Promise}
    */
-  function writeFileTo(file, dest) {
+  function writeFile(file) {
     return new Promise((res, rej) => {
       const reader = new FileReader();
       reader.onload = () => {
-        const path = `${dest}/${
-          file.webkitRelativePath !== "" ? file.webkitRelativePath : file.name
-        }`;
         try {
-          FS.writeFile(path, new Uint8Array(reader.result));
+          FS.writeFile(file.destination, new Uint8Array(reader.result));
           res();
         } catch (e) {
           console.log(e);
-          rej(new Error(`${path}: ${e.code ? e.code : e}`));
+          rej(new Error(`${file.destination}: ${e.code ? e.code : e}`));
         }
       };
       reader.onerror = rej;
@@ -209,27 +206,28 @@ var Module = {
       fileInput.multiple = true;
       if (dir) fileInput.webkitdirectory = true;
       fileInput.onchange = () => {
-        // sort the input files so that the directories are created first
-        const inputFiles = Array.from(fileInput.files).sort((a, b) => {
-          const aName =
-            a.webkitRelativePath === "" ? a.name : a.webkitRelativePath;
-          const bName =
-            b.webkitRelativePath === "" ? b.name : b.webkitRelativePath;
-          return aName.localeCompare(bName);
-        });
+        // make file.name actually good
+        const inputFiles = Array.from(fileInput.files);
+        inputFiles.forEach(
+          (f) =>
+            (f.destination = `${dest}/${
+              f.webkitRelativePath === "" ? f.name : f.webkitRelativePath
+            }`),
+        );
 
         // create the directory structure needed
         new Set(
           inputFiles
             .filter((f) => f.webkitRelativePath !== "")
             .map((f) => {
-              const segments = pathSegments(f.webkitRelativePath);
-              return `${dest}/${segments[segments.length - 2]}`;
-            }),
+              const segments = pathSegments(f.destination);
+              return segments[segments.length - 2];
+            })
+            .sort((a, b) => a.localeCompare(b)),
         ).forEach(mkdirp);
 
         // create the files
-        Promise.all(inputFiles.map((f) => writeFileTo(f, dest)))
+        Promise.all(inputFiles.map(writeFile))
           .then((v) => res(v.length))
           .catch(rej);
       };
