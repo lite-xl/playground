@@ -2,6 +2,8 @@ var Module = {
   preRun: [],
 };
 (() => {
+  "use strict";
+
   /**
    * Splits the path into different segments.
    * @param {string} path The path.
@@ -29,7 +31,7 @@ var Module = {
       if (e.code !== "EEXIST") throw e;
     }
   }
-  
+
   /**
    * Manages syncings from IDBFS to IndexedDB.
    */
@@ -78,20 +80,24 @@ var Module = {
      * Starts the autosync timer.
      */
     start() {
-      console.log(`IDBSync autosync: ${this.autoSync}, interval: ${this.saveInterval}`);
+      console.log(
+        `IDBSync autosync: ${this.autoSync}, interval: ${this.saveInterval}`
+      );
       this.stop();
       if (!this.autoSync) return;
       this.saveTimeout = setTimeout(() => this.save(), this.saveInterval);
     }
-    
+
     /**
      * Sync file changes to IndexedDB.
      */
     async save() {
       // store the resolve and reject functions, we will need it later
       const id = this.seq++;
-      console.log('Save ID: ', id);
-      const promise = new Promise((res, rej) => this.queue.push([id, res, rej]));
+      console.log("Save ID: ", id);
+      const promise = new Promise((res, rej) =>
+        this.queue.push([id, res, rej])
+      );
       this.execQueue();
       return promise;
     }
@@ -106,7 +112,10 @@ var Module = {
         this.debounceTimer = undefined;
       }
       return new Promise((res, rej) => {
-        this.debounceTimer = setTimeout(() => this.save().then(res).catch(rej), debouncePeriod);
+        this.debounceTimer = setTimeout(
+          () => this.save().then(res).catch(rej),
+          debouncePeriod
+        );
       });
     }
 
@@ -119,18 +128,20 @@ var Module = {
         return this.start();
       }
       const [id, res, rej] = this.queue.shift();
-      this.setStatus('Saving...');
+      this.setStatus("Saving...");
       try {
-        await new Promise((res, rej) => FS.syncfs(e => e ? rej(e) : res(e)));
+        await new Promise((res, rej) =>
+          FS.syncfs((e) => (e ? rej(e) : res(e)))
+        );
         this.setStatus(`Saved at ${new Date().toLocaleTimeString()}`);
-        console.log('Save completed, ID: ', id);
+        console.log("Save completed, ID: ", id);
         res();
       } catch (e) {
-        this.setStatus('Cannot sync. Please check your console.');
-        console.error('syncfs() failed:', e);
+        this.setStatus("Cannot sync. Please check your console.");
+        console.error("syncfs() failed:", e);
         rej(e);
       }
-      // technically we have TCO, but it really dont exist.        
+      // technically we have TCO, but it really dont exist.
       return this.execQueue();
     }
 
@@ -140,7 +151,7 @@ var Module = {
      */
     setStatus(msg) {
       if (!this.statusText)
-        this.statusText = document.getElementById('status_text');
+        this.statusText = document.getElementById("status_text");
       this.statusText.textContent = `Sync: ${msg}`;
     }
 
@@ -154,7 +165,7 @@ var Module = {
       }
     }
   }
-  
+
   Module.idbSync = new IDBSync();
 
   /**
@@ -227,9 +238,9 @@ var Module = {
   const start = () => {
     if (runtimeReady && storageReady && !started) {
       started = true;
-      console.log('Starting Lite XL...');
-      document.getElementById('loading').style.display = 'none';
-      FS.chdir('/home/web_user');
+      console.log("Starting Lite XL...");
+      document.getElementById("loading").style.display = "none";
+      FS.chdir("/home/web_user");
 
       // set up autosave
       Module.idbSync.start();
@@ -237,17 +248,18 @@ var Module = {
     }
   };
 
-  Module.arguments = ['/usr/share/lite-xl/welcome.md'];
-  Module.thisProgram = '/usr/bin/lite-xl';
+  Module.arguments = ["/usr/share/lite-xl/welcome.md"];
+  Module.thisProgram = "/usr/bin/lite-xl";
   Module.noInitialRun = true;
   Module.preRun.push(() => {
     ENV.LITE_SCALE = window.devicePixelRatio.toString();
 
     // mount IDBFS in home folder
     mkdirp("/home/web_user");
+    FS.mount(IDBFS, {}, "/home/web_user");
     FS.syncfs(true, (e) => {
       if (e) {
-        console.error('syncfs(true) failed: ', e);
+        console.error("syncfs(true) failed: ", e);
       } else {
         storageReady = true;
         start();
@@ -255,9 +267,9 @@ var Module = {
     });
   });
   Module.onExit = () => {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('canvas').style.display = 'none';
-    document.getElementById('close').style.display = 'block';
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("canvas").style.display = "none";
+    document.getElementById("close").style.display = "block";
   };
   Module.onRuntimeInitialized = () => {
     runtimeReady = true;
@@ -266,11 +278,11 @@ var Module = {
 
   // attach canvas to module
   window.onload = () => {
-    const status = document.getElementById('status');
-    Module.canvas = document.getElementById('canvas');
+    const status = document.getElementById("status");
+    Module.canvas = document.getElementById("canvas");
     Module.canvas.oncontextmenu = (e) => e.preventDefault();
     Module.setStatus = (s) => {
-      status.textContent = s === '' ? 'Initializing...' : s;
+      status.textContent = s === "" ? "Initializing..." : s;
     };
   };
 })();
