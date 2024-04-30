@@ -225,7 +225,9 @@ main() {
     fi
 
     # copy core over
-    cp -r "$rootdir/core/install/data/." "lite-xl/data"
+    if [[ $connector = enabled ]] || [[ $extra_plugins == enabled ]] || [[ $wasm_core == enabled ]]; then
+        cp -r "$rootdir/core/install/data/." "lite-xl/data"
+    fi
 
     # create data bundle
     # sidenote: the file extension is set to wasm to trick reverse proxies to compress it
