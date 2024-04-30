@@ -112,8 +112,33 @@ main() {
         exit 1
     fi
 
-    if ! command -v file_packager >/dev/null 2>&1; then
+    # check if emcc, wasm-dis and file_packager is found.
+    # if not, try to get it from emsdk
+    if ! type -p emcc >/dev/null || ! type -p file_packager >/dev/null || ! type -p wasm-dis >/dev/null; then
+        echo "emcc and tools not found, sourcing from emsdk"
+        if ! type -p emsdk; then
+            echo "error: cannot find emsdk"
+            exit 1
+        fi
+        source <(EMSDK_QUIET=1 emsdk construct_env)
+        local emcc_path="$(dirname "$(type -p emcc)")"
+        if ! type -p file_packager >/dev/null; then
+            # file_packager is inside emscripten/tools
+            export PATH="$(readlink -e "$emcc_path/tools"):$PATH"
+        fi
+        if ! type -p wasm-dis >/dev/null; then
+            # wasm-dis is inside emscripten/../bin
+            export PATH="$(readlink -e "$emcc_path/../bin"):$PATH"
+        fi
+    fi
+
+    if ! type -p file_packager >/dev/null; then
         echo "error: file_packager not found"
+        exit
+    fi
+
+    if ! type -p wasm-dis >/dev/null; then
+        echo "error: wasm-dis not found"
         exit
     fi
 
