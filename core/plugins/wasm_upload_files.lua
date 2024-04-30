@@ -34,7 +34,7 @@ command.add(nil, {
   ["wasm:upload-directory"] = function()
     core.command_view:enter("Destination directory", {
       submit = function(dest)
-        local real_dest = common.home_expand(dest)
+        local real_dest = system.absolute_path(common.home_expand(dest))
         local ok, err = connector.upload_files(real_dest, true)
         if ok then
           core.log("%s file(s) uploaded to %s", err, dest)
