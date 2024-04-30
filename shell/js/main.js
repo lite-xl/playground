@@ -209,7 +209,7 @@ var Module = {
   /**
    * Reads a file and write it to the filesystem.
    * @param {File} file The file to read.
-   * @returns {Promise}
+   * @returns {Promise<void>}
    */
   function writeFile(file) {
     return new Promise((res, rej) => {
@@ -232,6 +232,7 @@ var Module = {
    * Gets the file from the user and uploads it to a destination directory.
    * @param {string} dest The destination.
    * @param {boolean} [dir] Set this to true to accept directories.
+   * @returns {Promise<number>}
    */
   Module.uploadFiles = (dest, dir) => {
     return new Promise((res, rej) => {
