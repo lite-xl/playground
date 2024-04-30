@@ -230,6 +230,7 @@ var Module = {
           .then((v) => res(v.length))
           .catch(rej);
       };
+      fileInput.oncancel = () => res();
       fileInput.click();
     });
   };
