@@ -157,6 +157,72 @@ var Module = {
   
   Module.idbSync = new IDBSync();
 
+  /**
+   * Reads a file and write it to somewhere.
+   * @param {File} file The file to read.
+   * @returns {Promise}
+   */
+  function writeFileTo(file, dest) {
+    return new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const path = `${dest}/${
+          file.webkitRelativePath !== "" ? file.webkitRelativePath : file.name
+        }`;
+        try {
+          FS.writeFile(path, new Uint8Array(reader.result));
+          res();
+        } catch (e) {
+          console.log(e);
+          rej(new Error(`${path}: ${e.code ? e.code : e}`));
+        }
+      };
+      reader.onerror = rej;
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  /**
+   * Gets the file from the user and uploads it to a destination directory.
+   * @param {string} dest The destination.
+   * @param {boolean} [dir] Set this to true to accept directories.
+   */
+  Module.uploadFiles = (dest, dir) => {
+    return new Promise((res, rej) => {
+      // create a file input, trigger it
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.multiple = true;
+      if (dir) fileInput.webkitdirectory = true;
+      fileInput.onchange = () => {
+        // sort the input files so that the directories are created first
+        const inputFiles = Array.from(fileInput.files).sort((a, b) => {
+          const aName =
+            a.webkitRelativePath === "" ? a.name : a.webkitRelativePath;
+          const bName =
+            b.webkitRelativePath === "" ? b.name : b.webkitRelativePath;
+          return aName.localeCompare(bName);
+        });
+
+        // create the directory structure needed
+        new Set(
+          inputFiles
+            .filter((f) => f.webkitRelativePath !== "")
+            .map((f) => {
+              const segments = pathSegments(f.webkitRelativePath);
+              return segments[segments.length - 2];
+            })
+        ).forEach(mkdirp);
+
+        // create the files
+        Promise.all(inputFiles.map((f) => writeFileTo(f, dest)))
+          .then((v) => res(v.length))
+          .catch(rej);
+      };
+      fileInput.click();
+    });
+  };
+
   let storageReady, runtimeReady, started;
   const start = () => {
     if (runtimeReady && storageReady && !started) {
