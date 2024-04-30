@@ -45,6 +45,7 @@ var Module = {
       this.saveInterval = interval;
       this.queue = [];
       this.seq = 0;
+      this.running = false;
     }
 
     /**
@@ -102,7 +103,7 @@ var Module = {
       const promise = new Promise((res, rej) =>
         this.queue.push([id, res, rej]),
       );
-      this.execQueue();
+      if (!this.running) this.execQueue();
       return promise;
     }
 
@@ -129,11 +130,13 @@ var Module = {
     async execQueue() {
       if (this.queue.length === 0) {
         // wait for more items (by using sleep)
+        this.running = false;
         return this.start();
       }
       const [id, res, rej] = this.queue.shift();
       this.setStatus("Saving...");
       try {
+        this.running = true;
         await new Promise((res, rej) =>
           FS.syncfs((e) => (e ? rej(e) : res(e))),
         );
