@@ -9,6 +9,8 @@ local Doc = require "core.doc"
 
 local connector = require "libraries.connector"
 
+
+local setup_workspace_save
 config.plugins.autosync = common.merge({
   -- If true, Lite XL will sync after some time.
   sync_auto = true,
@@ -18,6 +20,8 @@ config.plugins.autosync = common.merge({
   sync_on_save = true,
   -- The time in seconds where Lite XL will debounce sync requests.
   save_debounce = 0.5,
+  -- If true, the workspace will be synced if autosync is enabled.
+  sync_workspace = true,
   -- config for settings ui
   config_spec = {
     name = "Sync",
@@ -29,6 +33,7 @@ config.plugins.autosync = common.merge({
       default = true,
       on_apply = function(v)
         connector.idbsync_set_auto_sync(v)
+        setup_workspace_save()
       end,
     },
     {
@@ -40,6 +45,7 @@ config.plugins.autosync = common.merge({
       min = 0.001,
       on_apply = function(v)
         connector.idbsync_set_interval(v * 1000)
+        setup_workspace_save()
       end,
     },
     {
@@ -56,6 +62,14 @@ config.plugins.autosync = common.merge({
       type = "number",
       default = 0.5,
       min = 0.001,
+    },
+    {
+      label = "Sync Workspace",
+      description = "Saves the workspace if Automatic Sync is enabled.",
+      path = "sync_workspace",
+      type = "toggle",
+      default = true,
+      on_apply = setup_workspace_save,
     },
   },
 }, config.plugins.autosync)
@@ -77,6 +91,24 @@ function core.load_user_directory()
   if ok then
     connector.idbsync_set_interval(config.plugins.autosync.sync_interval * 1000)
     connector.idbsync_set_auto_sync(config.plugins.autosync.sync_auto)
+    setup_workspace_save()
   end
   return ok, err
+end
+
+function setup_workspace_save()
+  if config.plugins.autosync.sync_auto and config.plugins.autosync.sync_workspace then
+    local last_save_time = system.get_time()
+    local workspace_save = require "plugins.wasm_workspace"
+    core.add_thread(function()
+      while config.plugins.autosync.sync_auto and config.plugins.autosync.sync_workspace do
+        if system.get_time() - last_save_time >= config.plugins.autosync.sync_interval then
+          core.log_quiet("Saving workspace...")
+          core.try(workspace_save)
+          last_save_time = system.get_time()
+        end
+        coroutine.yield(1/config.fps)
+      end
+    end)
+  end
 end
