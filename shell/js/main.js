@@ -11,13 +11,14 @@ var Module = {
   function pathSegments(path) {
     // if the first path segment is empty, it's probably the root
     // if other path segments are empty, it's just //bla and you can assume it's . in the middle
-    return path
+    const segments = path
       .split("/")
-      .map((x, i) => (x === "" ? (i === 0 ? "" : ".") : x))
-      .map(
-        (_, i, a) =>
-          a.slice(0, i + 1).join("/") + (i === a.length - 1 ? "" : "/"),
-      );
+      .map((x, i) => (x === "" ? (i === 0 ? "" : ".") : x));
+    if (segments[segments.length - 1] === ".") segments.pop();
+
+    return segments.map(
+        (x, i, a) =>
+          a.slice(0, i + 1).join("/") + (x === "" ? "/" : ""));
   }
 
   /**
