@@ -182,36 +182,38 @@ main() {
 
     # compile lite-xl
     pushd "$xldir"
-    if [[ $connector = enabled ]] && ! cmp "$rootdir/core/install/99-exported-functions.txt" "$builddir/99-exported-functions.txt" >/dev/null 2>&1; then
-        if [[ -d "$builddir" ]]; then
-            # different cross file, rebuild
-            rm -rf "$builddir"
-        fi
+    # generate a list of cross files, and check if lite-xl build directory is using an outdated version
+    declare -a cross_files
+    for f in "$rootdir/cross/"*.txt; do
+        cross_files+=("$f")
+    done
+    if [[ $connector = enabled ]]; then
+        for f in "$rootdir/core/install/"*.txt; do
+            cross_files+=("$f")
+        done
+    fi
+    md5sum "${cross_files[@]}" > "cross-files-checksums"
+
+    if [[ -d "$builddir" ]] && ! cmp "cross-files-checksums" "$builddir/cross-files-checksums" >/dev/null 2>&1; then
+        # cross file changed, delete it
+        rm -rf "$builddir"
     fi
 
     if ! [[ -d "$builddir" ]]; then
         # get a list of cross files
-        declare -a cross_files
+        declare -a cross_files_args
 
-        for f in "$rootdir/cross/"*.txt; do
-            cross_files+=("--cross-file" "$f")
+        for f in "${cross_files[@]}"; do
+            cross_files_args+=("--cross-file" "$f")
         done
 
-        if [[ $connector = enabled ]]; then
-            for f in "$rootdir/core/install/"*.txt; do
-                cross_files+=("--cross-file" "$f")
-            done
-        fi
-
         # configure
-        meson setup "$builddir" -Dportable=true \
+        meson setup "$builddir" --reconfigure -Dportable=true \
             --cross-file resources/cross/unknown-wasm32.txt \
-            "${cross_files[@]}"
+            "${cross_files_args[@]}"
         
-        # copy cross file over to keep track of settings
-        if [[ $connector ==  enabled ]]; then
-            cp "$rootdir/core/install/99-exported-functions.txt" "$builddir/99-exported-functions.txt"
-        fi
+        # copy the cross file checksums over to keep track of it
+        cp cross-files-checksums "$builddir/cross-files-checksums"
     fi
 
     # package
