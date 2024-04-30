@@ -272,6 +272,7 @@ var Module = {
     document.getElementById("loading").style.display = "none";
     document.getElementById("canvas").style.display = "none";
     document.getElementById("close").style.display = "block";
+    Module.idbSync.stop();
   };
   Module.onRuntimeInitialized = () => {
     runtimeReady = true;
