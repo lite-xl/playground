@@ -272,6 +272,103 @@ var Module = {
     });
   };
 
+  /**
+   * Automatically downloads a file.
+   * @param {File} file The file object.
+   */
+  function downloadFile(file) {
+    const url = URL.createObjectURL(file);
+    const elem = document.createElement("a");
+    elem.style.display = "none";
+    elem.href = url;
+    document.body.appendChild(elem);
+    elem.download = file.name;
+    elem.click();
+    document.body.removeChild(elem);
+    // revoke in 1 minute
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 60000);
+  }
+
+  /**
+   * Recursively zips a directory.
+   * @param {string} path The path to the directory.
+   * @returns {Promise<number>}
+   */
+  async function fsDownloadDirectory(path) {
+    if (!FS.isDir(FS.stat(path).mode)) {
+      throw new Error("cannot download non-directories");
+    }
+    const filename = path.split("/").pop();
+
+    // recursively read all files into a directory with a DFS
+    let count = 0;
+    const filesObj = {};
+    const stack = [path];
+    while (stack.length > 0) {
+      const currentEntry = stack.pop();
+      const entries = FS.readdir(currentEntry);
+
+      for (const entry of entries) {
+        if (entry === "." || entry == "..") continue;
+        const fullPath = `${currentEntry}/${entry}`;
+        const stat = FS.stat(fullPath);
+        if (FS.isDir(stat.mode)) {
+          // insert into stack
+          stack.push(fullPath);
+        } else if (FS.isFile(stat.mode)) {
+          filesObj[fullPath] = [FS.readFile(fullPath), { mtime: stat.mtime }];
+          count++;
+        }
+        // ignore other files
+      }
+    }
+
+    // create the zip file
+    const file = await new Promise((res, rej) => {
+      fflate.zip(filesObj, { consume: true, level: 9 }, (err, out) => {
+        if (err) {
+          rej(err);
+        } else {
+          res(out);
+        }
+      });
+    });
+
+    // download it
+    downloadFile(new File([file], filename, { type: "application/zip" }));
+
+    return count;
+  }
+
+  /**
+   * Downloads a file.
+   * @param {string} path The path.
+   * @returns {}
+   */
+  async function fsDownloadFile(path) {
+    const filename = path.split("/").pop();
+    console.log(path, filename);
+    const content = FS.readFile(path);
+    downloadFile(
+      new File([content], filename, {
+        type: "application/octet-stream",
+      }),
+    );
+    return 1;
+  }
+
+  Module.downloadFiles = async function (path) {
+    const stat = FS.stat(path);
+    if (FS.isDir(stat.mode)) {
+      return await fsDownloadDirectory(path);
+    } else if (FS.isFile(stat.mode)) {
+      return await fsDownloadFile(path);
+    }
+    return 0;
+  };
+
   let storageReady, runtimeReady, started;
   const start = () => {
     if (runtimeReady && storageReady && !started) {

@@ -1,6 +1,7 @@
 --mod-version:3
 
--- This plugin allows users to upload their local files onto the website.
+-- This plugin allows users to upload their local files onto the website,
+-- or download whatever that is on their browser.
 
 local core = require "core"
 local common = require "core.common"
@@ -44,5 +45,44 @@ command.add(nil, {
       end,
       suggest = suggest_directory,
     })
-  end
+  end,
+
+  ["wasm:download-file"] = function()
+    local files = {}
+    for dir, item in core.get_project_files() do
+      if item.type == "file" then
+        local path = (dir == core.project_dir and "" or dir .. PATHSEP)
+        table.insert(files, common.home_encode(path .. item.filename))
+      end
+    end
+    core.command_view:enter("Source file", {
+      submit = function(path)
+        local real_path = system.absolute_path(common.home_expand(path))
+        local ok, err = connector.download_files(real_path)
+        if ok then
+          core.log("downloaded %s", path)
+        else
+          core.error("cannot download %s: %s", path, err)
+        end
+      end,
+      suggest = function(text)
+        return common.fuzzy_match_with_recents(files, core.visited_files, text)
+      end
+    })
+  end,
+
+  ["wasm:download-directory"] = function()
+    core.command_view:enter("Destination directory", {
+      submit = function(path)
+        local real_path = system.absolute_path(common.home_expand(path))
+        local ok, err = connector.download_files(real_path)
+        if ok then
+          core.log("%s file(s) from %s are downloaded", err, path)
+        else
+          core.error("cannot download directory: %s", err)
+        end
+      end,
+      suggest = suggest_directory,
+    })
+  end,
 })

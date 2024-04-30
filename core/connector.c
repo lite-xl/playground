@@ -30,6 +30,16 @@ EM_ASYNC_JS(char *, file_upload, (char *dest, int dir), {
   }
 })
 
+EM_ASYNC_JS(char *, file_download, (char *path), {
+  try {
+    const count = await Module.downloadFiles(UTF8ToString(path));
+    return stringToNewUTF8("1" + count);
+  } catch (e) {
+    console.log(e);
+    return stringToNewUTF8("0" + e.toString());
+  }
+})
+
 static int f_idbsync_set_interval(lua_State *L) {
   EM_ASM({ Module.idbSync.setInterval($0); }, (int) luaL_checkinteger(L, 1));
   return 0;
@@ -102,6 +112,18 @@ static int f_upload_files(lua_State *L) {
   return 2;
 }
 
+static int f_download_files(lua_State *L) {
+  char *result = file_download((char *) luaL_checkstring(L, 1));
+  if (*result == '0') {
+    lua_pushnil(L);
+  } else {
+    lua_pushboolean(L, 1);
+  }
+  lua_pushstring(L, result + 1);
+  free(result);
+  return 2;
+}
+
 static luaL_Reg lib[] = {
   { "idbsync_set_interval", f_idbsync_set_interval },
   { "idbsync_get_interval", f_idbsync_get_interval },
@@ -114,6 +136,7 @@ static luaL_Reg lib[] = {
   { "idbsync_stop", f_idbsync_stop },
   { "idbsync_set_workspace_sync_status", f_idbsync_set_workspace_sync_status },
   { "upload_files", f_upload_files },
+  { "download_files", f_download_files },
   { NULL, NULL },
 };
 
