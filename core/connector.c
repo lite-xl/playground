@@ -10,8 +10,14 @@
 #define LITE_XL_PLUGIN_ENTRYPOINT
 #include "lite_xl_plugin_api.h"
 
-EM_ASYNC_JS(void, idbsync_save_sync, (), {
-  await Module.idbSync.save();
+EM_ASYNC_JS(char *, idbsync_save_sync, (), {
+  try {
+    await Module.idbSync.save();
+    return stringToNewUTF8("1");
+  } catch (e) {
+    console.error(e);
+    return stringToNewUTF8("0" + e.toString());
+  }
 })
 
 EM_ASYNC_JS(char *, file_upload, (char *dest, int dir), {
@@ -52,8 +58,17 @@ static int f_idbsync_start(lua_State *L) {
 }
 
 static int f_idbsync_save_sync(lua_State *L) {
-  idbsync_save_sync();
-  return 0;
+  int nret = 1;
+  char *result = idbsync_save_sync();
+  if (*result == '0') {
+    lua_pushnil(L);
+    lua_pushstring(L, result + 1);
+    nret = 2;
+  } else {
+    lua_pushboolean(L, 1);
+  }
+  free(result);
+  return nret;
 }
 
 static int f_idbsync_save(lua_State *L) {

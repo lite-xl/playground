@@ -15,5 +15,8 @@ if system.get_file_info(USERDIR .. "/.first") == nil then
     return
   end
   f:close()
-  connector.idbsync_save_sync()
+  local ok, err = connector.idbsync_save_sync()
+  if not ok then
+    core.error("Cannot sync changes: %s", err)
+  end
 end

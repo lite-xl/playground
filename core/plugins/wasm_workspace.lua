@@ -238,7 +238,14 @@ local function save_workspace()
     fp:write(string.format("return { path = %q, documents = %s, directories = %s }\n", core.project_dir, node_text, dir_text))
     fp:close()
   end
-  connector.idbsync_save_sync()
+  local ok, err = connector.idbsync_save_sync()
+  if ok then
+    connector.idbsync_set_workspace_sync_status("Synced.")
+    core.log_quiet("Workspace synced.")
+  else
+    connector.idbsync_set_workspace_sync_status("Cannot sync. Please check your console.")
+    core.error("Cannot sync workspace: %s", err)
+  end
 end
 
 
