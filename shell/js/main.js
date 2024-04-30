@@ -2,17 +2,31 @@ var Module = {
   preRun: [],
 };
 (() => {
-  'use strict';
+  /**
+   * Splits the path into different segments.
+   * @param {string} path The path.
+   */
+  function pathSegments(path) {
+    // if the first path segment is empty, it's probably the root
+    // if other path segments are empty, it's just //bla and you can assume it's . in the middle
+    return path
+      .split("/")
+      .map((x, i) => (x === "" ? (i === 0 ? "" : ".") : x))
+      .map(
+        (_, i, a) =>
+          a.slice(0, i + 1).join("/") + (i === a.length - 1 ? "" : "/")
+      );
+  }
 
   /**
    * Creates a directory.
    * @param {string} dir The directory.
    */
-  function mkdir(dir) {
+  function mkdirp(dir) {
     try {
-      FS.mkdir(dir);
+      pathSegments(dir).forEach((d) => FS.mkdir(d));
     } catch (e) {
-      if (e.code !== 'EEXIST') throw e;
+      if (e.code !== "EEXIST") throw e;
     }
   }
   
@@ -164,9 +178,7 @@ var Module = {
     ENV.LITE_SCALE = window.devicePixelRatio.toString();
 
     // mount IDBFS in home folder
-    mkdir('/home');
-    mkdir('/home/web_user');
-    FS.mount(IDBFS, {}, '/home/web_user');
+    mkdirp("/home/web_user");
     FS.syncfs(true, (e) => {
       if (e) {
         console.error('syncfs(true) failed: ', e);
