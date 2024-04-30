@@ -120,14 +120,18 @@ main() {
             echo "error: cannot find emsdk"
             exit 1
         fi
+        # shellcheck source=/dev/null
         source <(EMSDK_QUIET=1 emsdk construct_env)
+        # shellcheck disable=SC2155
         local emcc_path="$(dirname "$(type -p emcc)")"
         if ! type -p file_packager >/dev/null; then
             # file_packager is inside emscripten/tools
+            # shellcheck disable=SC2155
             export PATH="$(readlink -e "$emcc_path/tools"):$PATH"
         fi
         if ! type -p wasm-dis >/dev/null; then
             # wasm-dis is inside emscripten/../bin
+            # shellcheck disable=SC2155
             export PATH="$(readlink -e "$emcc_path/../bin"):$PATH"
         fi
     fi
