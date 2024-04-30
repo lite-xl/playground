@@ -14,6 +14,16 @@ EM_ASYNC_JS(void, idbsync_save_sync, (), {
   await Module.idbSync.save();
 })
 
+EM_ASYNC_JS(char *, file_upload, (char *dest, int dir), {
+  try {
+    const count = await Module.uploadFiles(UTF8ToString(dest), !!dir);
+    return stringToNewUTF8("1" + count);
+  } catch (e) {
+    console.error(e);
+    return stringToNewUTF8("0" + e.toString());
+  }
+})
+
 static int f_idbsync_set_interval(lua_State *L) {
   int interval = luaL_checkinteger(L, 1);
   EM_ASM({ Module.idbSync.setInterval($0); }, interval);
@@ -62,6 +72,19 @@ static int f_idbsync_stop(lua_State *L) {
   return 0;
 }
 
+static int f_upload_files(lua_State *L) {
+  char *result = file_upload((char *) luaL_checkstring(L, 1), lua_toboolean(L, 2));
+  // the function returns 0 as the first character if an error occured
+  if (*result == '0') {
+    lua_pushnil(L);
+  } else {
+    lua_pushboolean(L, 1);
+  }
+  lua_pushstring(L, result + 1);
+  free(result);
+  return 2;
+}
+
 static luaL_Reg lib[] = {
   { "idbsync_set_interval", f_idbsync_set_interval },
   { "idbsync_get_interval", f_idbsync_get_interval },
@@ -72,6 +95,7 @@ static luaL_Reg lib[] = {
   { "idbsync_save", f_idbsync_save },
   { "idbsync_save_debounced", f_idbsync_save_debounced },
   { "idbsync_stop", f_idbsync_stop },
+  { "upload_files", f_upload_files },
   { NULL, NULL },
 };
 
