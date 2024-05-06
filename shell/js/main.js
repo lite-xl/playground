@@ -18,7 +18,7 @@ var Module = {
     if (segments[segments.length - 1] === ".") segments.pop();
 
     return segments.map(
-      (x, i, a) => a.slice(0, i + 1).join("/") + (x === "" ? "/" : ""),
+      (x, i, a) => a.slice(0, i + 1).join("/") + (x === "" ? "/" : "")
     );
   }
 
@@ -90,7 +90,7 @@ var Module = {
      */
     start() {
       console.log(
-        `IDBSync autosync: ${this.autoSync}, interval: ${this.saveInterval}`,
+        `IDBSync autosync: ${this.autoSync}, interval: ${this.saveInterval}`
       );
       this.stop();
       if (!this.autoSync) return;
@@ -105,7 +105,7 @@ var Module = {
       const id = this.seq++;
       console.log("Save ID: ", id);
       const promise = new Promise((res, rej) =>
-        this.queue.push([id, res, rej]),
+        this.queue.push([id, res, rej])
       );
       if (!this.running) this.execQueue();
       return promise;
@@ -123,7 +123,7 @@ var Module = {
       return new Promise((res, rej) => {
         this.debounceTimer = setTimeout(
           () => this.save().then(res).catch(rej),
-          debouncePeriod,
+          debouncePeriod
         );
       });
     }
@@ -144,7 +144,7 @@ var Module = {
       try {
         this.running = true;
         await new Promise((res, rej) =>
-          FS.syncfs((e) => (e ? rej(e) : res(e))),
+          FS.syncfs((e) => (e ? rej(e) : res(e)))
         );
         this.setFileSyncStatus("Synced.");
         console.log("Save completed, ID: ", id);
@@ -187,10 +187,11 @@ var Module = {
       document.getElementById("file_sync_status").textContent = `Files: ${
         this.syncStatus.files.status
       } (${this.syncStatus.files.time.toLocaleTimeString()})`;
-      document.getElementById("workspace_sync_status").textContent =
-        `Workspace: ${
-          this.syncStatus.workspace.status
-        } (${this.syncStatus.workspace.time.toLocaleTimeString()})`;
+      document.getElementById(
+        "workspace_sync_status"
+      ).textContent = `Workspace: ${
+        this.syncStatus.workspace.status
+      } (${this.syncStatus.workspace.time.toLocaleTimeString()})`;
     }
 
     /**
@@ -248,7 +249,7 @@ var Module = {
           (f) =>
             (f.destination = `${dest}/${
               f.webkitRelativePath === "" ? f.name : f.webkitRelativePath
-            }`),
+            }`)
         );
 
         // create the directory structure needed
@@ -259,7 +260,7 @@ var Module = {
               const segments = pathSegments(f.destination);
               return segments[segments.length - 2];
             })
-            .sort((a, b) => a.localeCompare(b)),
+            .sort((a, b) => a.localeCompare(b))
         ).forEach(mkdirp);
 
         // create the files
@@ -301,7 +302,7 @@ var Module = {
       throw new Error("cannot download non-directories");
     }
     const filename = path.split("/").pop();
-    const relPath = path.split("/").slice(0, -1).join("/")
+    const relPath = path.split("/").slice(0, -1).join("/");
 
     // recursively read all files into a directory with a DFS
     let count = 0;
@@ -319,7 +320,7 @@ var Module = {
           // insert into stack
           stack.push(fullPath);
         } else if (FS.isFile(stat.mode)) {
-          const zipPath = fullPath.slice(relPath.length + 1)
+          const zipPath = fullPath.slice(relPath.length + 1);
           filesObj[zipPath] = [FS.readFile(fullPath), { mtime: stat.mtime }];
           count++;
         }
@@ -356,7 +357,7 @@ var Module = {
     downloadFile(
       new File([content], filename, {
         type: "application/octet-stream",
-      }),
+      })
     );
     return 1;
   }
