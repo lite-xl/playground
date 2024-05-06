@@ -14,7 +14,7 @@ This website automatically saves all the changes in the home folder
 If you close the page before the changes are saved, **your data will be lost.**
 **Do not close the tab** if you see `Autosave: Saving...` on the top right corner.
 
-# Upload Files
+# Upload & Download Files
 
 You can also upload files from your device and edit it here. To do this,
 press `ctrl+shift+p` and enter `wasm:upload-files`. You will be prompted with
@@ -23,6 +23,13 @@ you can choose the files that you want to upload.
 
 To upload directories, you can use `wasm:upload-directory`
 instead of `wasm:upload-files`. Note that empty directories will not be uploaded.
+
+To get the files from here, you can use `wasm:download-file` and `wasm:download-directory`.
+Lite XL will prompt you for the file or directory to download, and it will be downloaded
+onto your device. Directories are downloaded as ZIP files while files are downloaded as-is.
+
+You can also perform all these operations from the TreeView by right-clicking
+a file or directory entry.
 
 # Privacy and Security
 
