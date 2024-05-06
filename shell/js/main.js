@@ -301,6 +301,7 @@ var Module = {
       throw new Error("cannot download non-directories");
     }
     const filename = path.split("/").pop();
+    const relPath = path.split("/").slice(0, -1).join("/")
 
     // recursively read all files into a directory with a DFS
     let count = 0;
@@ -318,7 +319,8 @@ var Module = {
           // insert into stack
           stack.push(fullPath);
         } else if (FS.isFile(stat.mode)) {
-          filesObj[fullPath] = [FS.readFile(fullPath), { mtime: stat.mtime }];
+          const zipPath = fullPath.slice(relPath.length + 1)
+          filesObj[zipPath] = [FS.readFile(fullPath), { mtime: stat.mtime }];
           count++;
         }
         // ignore other files
