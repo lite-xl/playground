@@ -362,6 +362,11 @@ var Module = {
     return 1;
   }
 
+  /**
+   * Downloads a file or directory.
+   * @param {string} path The path to the file or directory.
+   * @returns the number of files downloaded.
+   */
   Module.downloadFiles = async function (path) {
     const stat = FS.stat(path);
     if (FS.isDir(stat.mode)) {
