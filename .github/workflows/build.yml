@@ -58,7 +58,7 @@ jobs:
         run: pip install meson ninja
 
       - name: Build
-        run: bash build.sh --connector --plugins --ref ${{ github.event.inputs.version }}
+        run: bash build.sh --connector --plugins --wasm-core --ref ${{ github.event.inputs.version }}
 
       - name: Minify
         run: |
