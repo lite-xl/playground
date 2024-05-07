@@ -35,7 +35,31 @@ EM_ASYNC_JS(char *, file_download, (char *path), {
     const count = await Module.downloadFiles(UTF8ToString(path));
     return stringToNewUTF8("1" + count);
   } catch (e) {
-    console.log(e);
+    console.error(e);
+    return stringToNewUTF8("0" + e.toString());
+  }
+})
+
+EM_ASYNC_JS(char *, clipboard_copy, (const char* str), {
+  try {
+    document.getElementById("clipping").focus();
+    await navigator.clipboard.writeText(UTF8ToString(str));
+    document.getElementById("canvas").focus();
+    return stringToNewUTF8("1");
+  } catch (e) {
+    console.error(e);
+    return stringToNewUTF8("0" + e.toString());
+  }
+})
+
+EM_ASYNC_JS(char*, clipboard_paste, (), {
+  try {
+    document.getElementById("clipping").focus();
+    const str = await navigator.clipboard.readText();
+    document.getElementById("canvas").focus();
+    return stringToNewUTF8("1" + str);
+  } catch (e) {
+    console.error(e);
     return stringToNewUTF8("0" + e.toString());
   }
 })
@@ -124,6 +148,33 @@ static int f_download_files(lua_State *L) {
   return 2;
 }
 
+static int f_get_clipboard(lua_State *L) {
+  char *result = clipboard_paste();
+  if (*result == '0') {
+    lua_pushnil(L);
+  } else {
+    lua_pushboolean(L, 1);
+  }
+  lua_pushstring(L, result + 1);
+  free(result);
+  return 2;
+}
+
+static int f_set_clipboard(lua_State *L) {
+  int nret = 1;
+  const char *content = luaL_checkstring(L, 1);
+  char *result = clipboard_copy(content);
+  if (*result == '0') {
+    lua_pushnil(L);
+    lua_pushstring(L, result + 1);
+    nret = 2;
+  } else {
+    lua_pushboolean(L, 1);
+  }
+  free(result);
+  return nret;
+}
+
 static luaL_Reg lib[] = {
   { "idbsync_set_interval", f_idbsync_set_interval },
   { "idbsync_get_interval", f_idbsync_get_interval },
@@ -137,6 +188,8 @@ static luaL_Reg lib[] = {
   { "idbsync_set_workspace_sync_status", f_idbsync_set_workspace_sync_status },
   { "upload_files", f_upload_files },
   { "download_files", f_download_files },
+  { "get_clipboard", f_get_clipboard },
+  { "set_clipboard", f_set_clipboard },
   { NULL, NULL },
 };
 

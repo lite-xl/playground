@@ -395,6 +395,7 @@ var Module = {
   Module.noInitialRun = true;
   Module.preRun.push(() => {
     ENV.LITE_SCALE = window.devicePixelRatio.toString();
+    ENV.LITE_XL_RUNTIME = "core.wasm_core";
 
     // mount IDBFS in home folder
     mkdirp("/home/web_user");

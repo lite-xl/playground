@@ -24,6 +24,7 @@ canvas {
   position: fixed;
   top: 0;
   left: 0;
+  z-index: 5;
 }
 
 .modal {
@@ -80,4 +81,12 @@ canvas {
 
 .sync_indicator:hover .status {
   visibility: visible;
+}
+
+#clipping {
+  width: 0;
+  height: 0;
+  border: 0;
+  position: fixed;
+  z-index: 10;
 }
