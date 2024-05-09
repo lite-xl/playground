@@ -13,6 +13,10 @@ end
 local ContextMenu = require "core.contextmenu"
 local treeview = require "plugins.treeview"
 
+-- if treeview size is larger than 40% of the screen, hide the thing by default
+local w = system.get_window_size()
+treeview:set_target_size("x", math.min(config.plugins.treeview.size, w / 100 * 40))
+
 -- remove the open in system entry
 for _, items in ipairs(treeview.contextmenu.itemset) do
     local context_items = items.items
