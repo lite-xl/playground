@@ -33,7 +33,12 @@ local docview_update = DocView.update
 function DocView:update(...)
   docview_update(self, ...)
   if core.active_view == self then
-    connector.focus_text_input()
     recalculate_input_rect(self)
   end
+end
+
+local core_set_active_view = core.set_active_view
+function core.set_active_view(view)
+  core_set_active_view(view)
+  connector.focus_text_input(view:is(DocView))
 end

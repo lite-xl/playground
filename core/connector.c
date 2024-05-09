@@ -179,7 +179,7 @@ static int f_set_clipboard(lua_State *L) {
 }
 
 static int f_focus_text_input(lua_State *L) {
-  EM_ASM({ document.getElementById("textinput").focus(); });
+  EM_ASM({ document.getElementById($0 ? "textinput" : "canvas").focus(); }, lua_toboolean(L, 1));
   return 0;
 }
 
