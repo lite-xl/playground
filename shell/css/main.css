@@ -73,14 +73,14 @@ canvas {
 
 .sync_indicator.status {
   position: relative;
-  visibility: hidden;
+  display: none;
   background-color: whitesmoke;
   padding: 0.5rem;
   vertical-align: top;
 }
 
 .sync_indicator:hover .status {
-  visibility: visible;
+  display: inline-block;
 }
 
 .hidden {
