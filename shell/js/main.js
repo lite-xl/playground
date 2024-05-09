@@ -428,5 +428,40 @@ var Module = {
     Module.setStatus = (s) => {
       status.textContent = s === "" ? "Initializing..." : s;
     };
+
+    // hook up our text input
+    const textInput = document.getElementById("textinput");
+
+    /**
+     * Writes a string
+     * @param {InputEvent|CompositionEvent} e
+     */
+    function addInput(e) {
+      if (e.data) {
+        // emulate keypress events
+        for (const char of [...e.data]) {
+          window.dispatchEvent(
+            new KeyboardEvent("keypress", {
+              key: char,
+              isComposing: e.isComposing,
+              charCode: char.charCodeAt(char.length - 1),
+            })
+          );
+        }
+      }
+    }
+    // ignore composition text, only get end result
+    textInput.addEventListener("compositionend", addInput);
+    textInput.addEventListener("input", (e) => {
+      if (e.inputType == "deleteContentBackward") {
+        const ev = {
+          isComposing: e.isComposing,
+          code: "Backspace",
+        };
+        // keypress does not send backspace events
+        window.dispatchEvent(new KeyboardEvent("keydown", ev));
+        window.dispatchEvent(new KeyboardEvent("keyup", ev));
+      } else if (!e.isComposing) addInput(e);
+    });
   };
 })();

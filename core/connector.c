@@ -178,6 +178,26 @@ static int f_set_clipboard(lua_State *L) {
   return 1;
 }
 
+static int f_focus_text_input(lua_State *L) {
+  EM_ASM({ document.getElementById("textinput").focus(); });
+  return 0;
+}
+
+static int f_set_text_input_rect(lua_State *L) {
+  lua_Number x = luaL_checknumber(L, 1);
+  lua_Number y = luaL_checknumber(L, 2);
+  lua_Number w = luaL_checknumber(L, 3);
+  lua_Number h = luaL_checknumber(L, 4);
+  EM_ASM({
+    const el = document.getElementById("textinput");
+    el.style.left = ($0 / window.devicePixelRatio) + "px";
+    el.style.top = ($1 / window.devicePixelRatio) + "px";
+    el.style.width = ($2 / window.devicePixelRatio) + "px";
+    el.style.height = ($3 / window.devicePixelRatio) + "px";
+  }, x, y, w, h);
+  return 0;
+}
+
 static luaL_Reg lib[] = {
   { "idbsync_set_interval", f_idbsync_set_interval },
   { "idbsync_get_interval", f_idbsync_get_interval },
@@ -193,6 +213,8 @@ static luaL_Reg lib[] = {
   { "download_files", f_download_files },
   { "get_clipboard", f_get_clipboard },
   { "set_clipboard", f_set_clipboard },
+  { "focus_text_input", f_focus_text_input },
+  { "set_text_input_rect", f_set_text_input_rect },
   { NULL, NULL },
 };
 

@@ -83,7 +83,7 @@ canvas {
   visibility: visible;
 }
 
-#clipping {
+.hidden {
   width: 0;
   height: 0;
   border: 0;
