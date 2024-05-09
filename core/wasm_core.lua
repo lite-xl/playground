@@ -7,19 +7,18 @@ local core = require "core"
 local err_msg = {}
 
 function system.get_clipboard()
-  local ok, text = connector.get_clipboard()
-  print(ok, text)
-  if not ok and err_msg[text] == nil then
-    core.error("cannot interact with clipboard: %s", text)
-    err_msg[text] = true
+  local text, err = connector.get_clipboard()
+  if err ~= nil and err_msg[err] == nil then
+    core.error("cannot use clipboard: %s", err)
+    err_msg[err] = true
   end
-  return ok and text or ""
+  return text
 end
 
 function system.set_clipboard(text)
-  local ok, err = connector.set_clipboard(text)
-  if not ok and err_msg[err] == nil then
-    core.error("cannot interact with clipboard: %s", err)
+  local err = connector.set_clipboard(text)
+  if err ~= nil and err_msg[err] == nil then
+    core.error("cannot use clipboard: %s", err)
     err_msg[err] = true
   end
 end

@@ -41,26 +41,30 @@ EM_ASYNC_JS(char *, file_download, (char *path), {
 })
 
 EM_ASYNC_JS(char *, clipboard_copy, (const char* str), {
+  Module.clipboardText = UTF8ToString(str);
   try {
     document.getElementById("clipping").focus();
-    await navigator.clipboard.writeText(UTF8ToString(str));
+    await navigator.clipboard.writeText(Module.clipboardText);
     document.getElementById("canvas").focus();
-    return stringToNewUTF8("1");
+    return null;
   } catch (e) {
     console.error(e);
-    return stringToNewUTF8("0" + e.toString());
+    return stringToNewUTF8(e.toString());
   }
 })
 
-EM_ASYNC_JS(char*, clipboard_paste, (), {
+EM_ASYNC_JS(int, clipboard_paste, (char* *result, char* *err), {
   try {
     document.getElementById("clipping").focus();
     const str = await navigator.clipboard.readText();
     document.getElementById("canvas").focus();
-    return stringToNewUTF8("1" + str);
+    setValue(result, stringToNewUTF8(str), "*");
+    return 0;
   } catch (e) {
     console.error(e);
-    return stringToNewUTF8("0" + e.toString());
+    setValue(err, stringToNewUTF8(e.toString()), "*");
+    setValue(result, stringToNewUTF8(Module.clipboardText || ""), "*");
+    return -1;
   }
 })
 
@@ -149,30 +153,29 @@ static int f_download_files(lua_State *L) {
 }
 
 static int f_get_clipboard(lua_State *L) {
-  char *result = clipboard_paste();
-  if (*result == '0') {
-    lua_pushnil(L);
+  char *err = NULL, *result = NULL;
+  lua_settop(L, 0);
+  if (clipboard_paste(&result, &err) == 0) {
+    lua_pushstring(L, result);
   } else {
-    lua_pushboolean(L, 1);
+    lua_pushstring(L, result);
+    lua_pushstring(L, err);
   }
-  lua_pushstring(L, result + 1);
   free(result);
-  return 2;
+  free(err);
+  return lua_gettop(L);
 }
 
 static int f_set_clipboard(lua_State *L) {
-  int nret = 1;
-  const char *content = luaL_checkstring(L, 1);
-  char *result = clipboard_copy(content);
-  if (*result == '0') {
-    lua_pushnil(L);
-    lua_pushstring(L, result + 1);
-    nret = 2;
+  lua_settop(L, 1);
+  char *err = clipboard_copy(luaL_checkstring(L, 1));
+  if (err == NULL) {
+    lua_pushstring(L, err);
+    free(err);
   } else {
-    lua_pushboolean(L, 1);
+    lua_pushnil(L);
   }
-  free(result);
-  return nret;
+  return 1;
 }
 
 static luaL_Reg lib[] = {
