@@ -103,7 +103,7 @@ function setup_workspace_save()
     core.add_thread(function()
       while config.plugins.autosync.sync_auto and config.plugins.autosync.sync_workspace do
         if system.get_time() - last_save_time >= config.plugins.autosync.sync_interval then
-          core.log_quiet("Saving workspace...")
+          core.log_quiet("Syncing workspace...")
           core.try(workspace_save)
           last_save_time = system.get_time()
         end
