@@ -31,6 +31,16 @@ onto your device. Directories are downloaded as ZIP files while files are downlo
 You can also perform all these operations from the TreeView by right-clicking
 a file or directory entry.
 
+# Clipboard Operations
+
+Lite XL uses the [Clipboard API][4] to access your system's clipboard.
+If the API is not supported, then copy-pasting will only be available within the browser tab.
+On Chrome and other Chromium-based browsers, a one-time confirmation will be shown
+when pasting content into Lite XL.
+On Firefox-based browsers, copy-pasting data within Lite XL will work,
+but a confirmation prompt will be shown when pasting data outside of the tab
+(e.g. from another application).
+
 # Privacy and Security
 
 Your data will not be sent to any services or servers in the cloud
@@ -41,3 +51,4 @@ Everything stays in your browser, including the files you saved in here.
 [1]: https://emscripten.org/
 [2]: https://webassembly.org/
 [3]: https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API
+[4]: https://developer.mozilla.org/en-US/docs/Web/API/Clipboard
