@@ -52,6 +52,7 @@ Module.onRuntimeInitialized = () => {
   runtimeReady = true;
   start();
 };
+Module.locateFile = (name, prefix) => prefix + (name.endsWith(".json") ? "js/" + name : name);
 
 // attach canvas to module
 window.onload = () => {

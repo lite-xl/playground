@@ -250,10 +250,10 @@ main() {
     fi
 
     # create data bundle
-    # sidenote: the file extension is set to wasm to trick reverse proxies to compress it
-    file_packager bundle.wasm --preload lite-xl/data@/usr/share/lite-xl \
+    # sidenote: the file extension is set to json to trick reverse proxies to compress it
+    file_packager bundle.json --preload lite-xl/data@/usr/share/lite-xl \
         --preload "$rootdir/welcome.md@/usr/share/lite-xl/welcome.md" \
-        --js-output=bundle.wasm.js --use-preload-cache --no-node --no-force \
+        --js-output=bundle.json.js --use-preload-cache --no-node --no-force \
         --use-preload-plugins --quiet
 
     popd
@@ -277,7 +277,7 @@ main() {
     # copy all the files
     cp -r "$rootdir/shell/dist/." "$output"
     cp "$xldir/lite-xl/lite-xl.js" "$xldir/lite-xl/lite-xl.wasm" "$output/js"
-    cp "$xldir/bundle.wasm.js" "$xldir/bundle.wasm" "$output/js"
+    cp "$xldir/bundle.json.js" "$xldir/bundle.json" "$output/js"
 }
 
 main "$@"
