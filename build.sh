@@ -59,16 +59,19 @@ main() {
                 shift
                 shift
                 ;;
+
             -o|--output)
                 output="$2"
                 shift
                 shift
                 ;;
+
             --debug)
                 set -x
                 debug="--debug"
                 shift
                 ;;
+
             -h|--help)
                 show_help
                 exit 0
@@ -79,11 +82,13 @@ main() {
                 shift
                 shift
                 ;;
+
             -x|--xldir)
                 xldir="$2"
                 shift
                 shift
                 ;;
+
             -a|--addons)
                 addons="--addons"
                 shift
@@ -93,14 +98,17 @@ main() {
                 connector="disabled"
                 shift
                 ;;
+
             -P|--no-plugins)
                 extra_plugins="disabled"
                 shift
                 ;;
+
             -W|--no-wasm-core)
                 wasm_core="disabled"
                 shift
                 ;;
+
             *)
                 ;;
         esac
