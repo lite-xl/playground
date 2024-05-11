@@ -263,7 +263,7 @@ main() {
     mkdir "$output"
 
     # copy all the files
-    cp -r "$rootdir/shell/." "$output"
+    cp -r "$rootdir/shell/css" "$rootdir/shell/js" "$rootdir/shell/"*.html "$output"
     cp "lite-xl/lite-xl.js" "lite-xl/lite-xl.wasm" "$output"
     cp bundle.wasm.js bundle.wasm "$output"
 }
