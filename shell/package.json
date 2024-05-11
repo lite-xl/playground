@@ -1,0 +1,15 @@
+{
+  "name": "playground-shell",
+  "version": "1.0.0",
+  "description": "The shell for Lite XL WASM Playground",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier -w **/*.js **/*.css **/*.html"
+  },
+  "author": "takase1121",
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "^3.2.5"
+  }
+}

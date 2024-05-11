@@ -187,11 +187,10 @@ var Module = {
       document.getElementById("file_sync_status").textContent = `Files: ${
         this.syncStatus.files.status
       } (${this.syncStatus.files.time.toLocaleTimeString()})`;
-      document.getElementById(
-        "workspace_sync_status"
-      ).textContent = `Workspace: ${
-        this.syncStatus.workspace.status
-      } (${this.syncStatus.workspace.time.toLocaleTimeString()})`;
+      document.getElementById("workspace_sync_status").textContent =
+        `Workspace: ${
+          this.syncStatus.workspace.status
+        } (${this.syncStatus.workspace.time.toLocaleTimeString()})`;
     }
 
     /**

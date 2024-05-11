@@ -5,4 +5,6 @@ core/.cache
 core/build
 core/install
 
+shell/node_modules
+
 lite-xl
