@@ -21,6 +21,7 @@ show_help() {
     echo "                         Default: 'build'."
     echo "-o --output OUTPUTDIR    Sets the output path."
     echo "                         Default: 'dist'."
+    echo "-w --watch               Uses watchexec to build if a file had changed."
     echo "   --debug               Debug this script."
     echo "-h --help                Shows this message."
     echo
@@ -46,10 +47,13 @@ main() {
     local addons=""
     local debug=""
     local ref=""
+    local watch=""
     
     local connector="enabled"
     local extra_plugins="enabled"
     local wasm_core="enabled"
+
+    local ORIGINAL_ARGS=("$@")
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -63,6 +67,11 @@ main() {
             -o|--output)
                 output="$2"
                 shift
+                shift
+                ;;
+
+            -w|--watch)
+                watch="true"
                 shift
                 ;;
 
@@ -156,6 +165,10 @@ main() {
     # normalize dirs
     output="$PWD/$output"
     rootdir="$PWD"
+
+    if [[ $watch = "true" ]] && [[ -z ${BUILD_SH_WATCH_CHILD-} ]]; then
+        exec env BUILD_SH_WATCH_CHILD=1 watchexec -w core -w cross -w shell -w lite-xl -w welcome.md -w build.sh $BASH_SOURCE "${ORIGINAL_ARGS[@]}"
+    fi
 
     if ! [[ -d "$xldir/.git" ]]; then
         git clone "https://github.com/lite-xl/lite-xl" "$xldir"
