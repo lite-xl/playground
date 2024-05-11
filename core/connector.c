@@ -43,9 +43,7 @@ EM_ASYNC_JS(char *, file_download, (char *path), {
 EM_ASYNC_JS(char *, clipboard_copy, (const char* str), {
   Module.clipboardText = UTF8ToString(str);
   try {
-    document.getElementById("clipping").focus();
     await navigator.clipboard.writeText(Module.clipboardText);
-    document.getElementById("canvas").focus();
     return null;
   } catch (e) {
     console.error(e);
@@ -55,9 +53,7 @@ EM_ASYNC_JS(char *, clipboard_copy, (const char* str), {
 
 EM_ASYNC_JS(int, clipboard_paste, (char* *result, char* *err), {
   try {
-    document.getElementById("clipping").focus();
     const str = await navigator.clipboard.readText();
-    document.getElementById("canvas").focus();
     setValue(result, stringToNewUTF8(str), "*");
     return 0;
   } catch (e) {
