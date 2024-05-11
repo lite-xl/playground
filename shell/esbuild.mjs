@@ -7,7 +7,7 @@ import * as esbuild from "esbuild";
 import { env } from "process";
 
 await esbuild.build({
-  entryPoints: ["js/main.mjs", "css/main.css"],
+  entryPoints: ["js/main.mjs", "js/advanced.mjs", "css/main.css"],
   bundle: true,
   sourcemap: true,
   minify: true,
