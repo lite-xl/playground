@@ -5,11 +5,18 @@
   "main": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "prettier -w **/*.js **/*.css **/*.html"
+    "format": "prettier -w **/*.js **/*.css **/*.html",
+    "build:bundle": "esbuild js/main.mjs css/main.css --bundle --sourcemap --minify --outdir=dist --target=es2017",
+    "build:html": "cp -r html/. favicon.png dist",
+    "build": "npm run build:bundle && npm run build:html"
   },
   "author": "takase1121",
   "license": "MIT",
   "devDependencies": {
+    "esbuild": "^0.21.1",
     "prettier": "^3.2.5"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2"
   }
 }

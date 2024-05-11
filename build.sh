@@ -5,7 +5,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-if ! [[ -f "shell/index.html" ]]; then
+if ! [[ -f "shell/package.json" ]]; then
     echo "Please run this script from the root directory of the repository."
     exit 1
 fi
@@ -256,6 +256,18 @@ main() {
         --js-output=bundle.wasm.js --use-preload-cache --no-node --no-force \
         --use-preload-plugins --quiet
 
+    popd
+
+    # build the shell
+    pushd shell
+    if [[ -n ${GITHUB_ACTIONS-} ]]; then
+        npm ci
+    else
+        npm i -D
+    fi
+    npm run build
+    popd
+
     # create the distribution
     if [[ -d "$output" ]]; then
         rm -r "$output"
@@ -263,9 +275,9 @@ main() {
     mkdir "$output"
 
     # copy all the files
-    cp -r "$rootdir/shell/css" "$rootdir/shell/js" "$rootdir/shell/"*.html "$output"
-    cp "lite-xl/lite-xl.js" "lite-xl/lite-xl.wasm" "$output"
-    cp bundle.wasm.js bundle.wasm "$output"
+    cp -r "$rootdir/shell/dist/." "$output"
+    cp "$xldir/lite-xl/lite-xl.js" "$xldir/lite-xl/lite-xl.wasm" "$output/js"
+    cp "$xldir/bundle.wasm.js" "$xldir/bundle.wasm" "$output/js"
 }
 
 main "$@"
