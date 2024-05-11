@@ -98,7 +98,7 @@ export function uploadFiles(dest, dir) {
         .then((v) => res(v.length))
         .catch(rej);
     };
-    fileInput.oncancel = () => res();
+    fileInput.oncancel = () => res(0);
     fileInput.click();
   });
 }
@@ -182,7 +182,6 @@ async function fsDownloadDirectory(path) {
  */
 async function fsDownloadFile(path) {
   const filename = path.split("/").pop();
-  console.log(path, filename);
   const content = FS.readFile(path);
   downloadFile(
     new File([content], filename, {
