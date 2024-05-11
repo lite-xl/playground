@@ -32,9 +32,9 @@ show_help() {
     echo "-a --addons              Package addons as well."
     echo
     echo "Plugins options:"
-    echo "-c --connector           Builds the connector."
-    echo "-p --plugins             Installs the plugins for better web browser integration."
-    echo "-w --wasm-core           Installs extra hooks."
+    echo "-C --no-connector        Do not build the connector."
+    echo "-P --no-plugins          Do not install extra plugins for better web browser integration."
+    echo "-W --no-wasm-core        Do not install extra hooks."
     echo
 }
 
@@ -47,9 +47,9 @@ main() {
     local debug=""
     local ref=""
     
-    local connector="disabled"
-    local extra_plugins="disabled"
-    local wasm_core="disabled"
+    local connector="enabled"
+    local extra_plugins="enabled"
+    local wasm_core="enabled"
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -89,19 +89,18 @@ main() {
                 shift
                 ;;
 
-            -c|--connector)
-                connector="enabled"
+            -C|--no-connector)
+                connector="disabled"
                 shift
                 ;;
-            -p|--plugins)
-                extra_plugins="enabled"
+            -P|--no-plugins)
+                extra_plugins="disabled"
                 shift
                 ;;
-            -w|--wasm-core)
-                wasm_core="enabled"
+            -W|--no-wasm-core)
+                wasm_core="disabled"
                 shift
                 ;;
-
             *)
                 ;;
         esac
