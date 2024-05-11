@@ -1,5 +1,12 @@
 /**
- * Manages syncings from IDBFS to IndexedDB.
+ * @file Manages syncing between IDBFS and IndexedDB.
+ * @author takase1121
+ */
+
+import { FS } from "./env.mjs";
+
+/**
+ * Manages syncing from IDBFS to IndexedDB.
  */
 export class IDBSync {
   constructor(interval = 5000) {

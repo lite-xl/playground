@@ -1,4 +1,10 @@
-import { zip } from "fflate"
+/**
+ * @file Filesystem related utilities.
+ * @author takase1121
+ */
+
+import { zip } from "fflate";
+import { FS } from "./env.mjs";
 
 /**
  * Splits the path into different segments.

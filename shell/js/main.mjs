@@ -1,17 +1,23 @@
+/**
+ * @file Sets up the environment for running Lite XL.
+ * @author takase1121
+ */
+
+import { ENV, FS, reloadEmscriptenEnv } from "./env.mjs";
 import { mkdirp, uploadFiles, downloadFiles } from "./fs.mjs";
 import { IDBSync } from "./idbsync.mjs";
 
-const Module = {
+// export the Module object explicitly to prevent minifiers from touching it
+window.Module = {
   preRun: [],
   arguments: [],
 };
 
-Module.idbSync = new IDBSync();
-Module.uploadFiles = uploadFiles;
-Module.downloadFiles = downloadFiles;
-
 let storageReady, runtimeReady, started;
-const start = () => {
+/**
+ * Starts Lite XL.
+ */
+function start() {
   if (runtimeReady && storageReady && !started) {
     started = true;
     console.log("Starting Lite XL...");
@@ -20,19 +26,25 @@ const start = () => {
 
     // set up autosave
     Module.idbSync.start();
-    callMain(Module.arguments);
+    Module.callMain(Module.arguments);
   }
-};
+}
+
+// export functions accessed by C
+Module.idbSync = new IDBSync();
+Module.uploadFiles = uploadFiles;
+Module.downloadFiles = downloadFiles;
 
 Module.thisProgram = "/usr/bin/lite-xl";
 Module.noInitialRun = true;
 Module.preRun.push(() => {
+  reloadEmscriptenEnv();
   ENV.LITE_SCALE = window.devicePixelRatio.toString();
   ENV.LITE_XL_RUNTIME = "core.wasm_core";
 
   // mount IDBFS in home folder
   mkdirp("/home/web_user");
-  FS.mount(IDBFS, {}, "/home/web_user");
+  FS.mount(Module.IDBFS, {}, "/home/web_user");
   FS.syncfs(true, (e) => {
     if (e) {
       console.error("syncfs(true) failed: ", e);
@@ -52,10 +64,28 @@ Module.onRuntimeInitialized = () => {
   runtimeReady = true;
   start();
 };
-Module.locateFile = (name, prefix) => prefix + (name.endsWith(".json") ? "js/" + name : name);
+
+/**
+ * Writes a string as a series of keyboard events.
+ * @param {InputEvent|CompositionEvent} e
+ */
+function addInput(e) {
+  if (e.data) {
+    // emulate keypress events
+    for (const char of [...e.data]) {
+      window.dispatchEvent(
+        new KeyboardEvent("keypress", {
+          key: char,
+          isComposing: e.isComposing,
+          charCode: char.charCodeAt(char.length - 1),
+        })
+      );
+    }
+  }
+}
 
 // attach canvas to module
-window.onload = () => {
+window.addEventListener("load", () => {
   const status = document.getElementById("status");
   Module.canvas = document.getElementById("canvas");
   Module.canvas.oncontextmenu = (e) => e.preventDefault();
@@ -66,25 +96,6 @@ window.onload = () => {
   // hook up our text input
   const textInput = document.getElementById("textinput");
 
-  /**
-   * Writes a string
-   * @param {InputEvent|CompositionEvent} e
-   */
-  function addInput(e) {
-    if (e.data) {
-      // emulate keypress events
-      for (const char of [...e.data]) {
-        window.dispatchEvent(
-          new KeyboardEvent("keypress", {
-            key: char,
-            isComposing: e.isComposing,
-            charCode: char.charCodeAt(char.length - 1),
-          })
-        );
-      }
-    }
-  }
-  
   // ignore composition text, only get end result
   textInput.addEventListener("compositionend", addInput);
   textInput.addEventListener("input", (e) => {
@@ -98,6 +109,9 @@ window.onload = () => {
       window.dispatchEvent(new KeyboardEvent("keyup", ev));
     } else if (!e.isComposing) addInput(e);
   });
-};
+});
 
-window.Module = Module;
+// require the bundle loader and lite-xl itself, the actual paths are
+// handled by esbuild script itself.
+require("lite-xl");
+require("lite-xl-bundle");

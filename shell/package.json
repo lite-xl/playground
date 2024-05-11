@@ -5,8 +5,8 @@
   "main": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "prettier -w **/*.js **/*.css **/*.html",
-    "build:bundle": "esbuild js/main.mjs css/main.css --bundle --sourcemap --minify --outdir=dist --target=es2017",
+    "format": "prettier -w **/*.mjs **/*.css **/*.html",
+    "build:bundle": "node esbuild.mjs",
     "build:html": "cp -r html/. favicon.png dist",
     "build": "npm run build:bundle && npm run build:html"
   },

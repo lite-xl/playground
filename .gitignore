@@ -8,5 +8,4 @@ core/install
 shell/node_modules
 shell/dist
 
-lite-xl/build
-lite-xl/.git
+lite-xl

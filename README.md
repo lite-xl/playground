@@ -19,7 +19,7 @@ In general, you will need the following tools:
 - A HTTP Server (I use `http-server`, but Python's `http.server` will work with caveats.)
 - Git
 - Bash (MSYS2 might work but not tested)
-- npm (Optional, for prettifying source code)
+- npm
 
 Your entry point will be `build.sh`, which can be used to build and deploy the application.
 For most people, running `./build.sh` will be sufficient,

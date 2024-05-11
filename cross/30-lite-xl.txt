@@ -24,6 +24,10 @@ malloc_impl = 'emmalloc'
 # e.g. stdout, stderr, fopen, etc. Use another cross file to override this value.
 exported_functions = ''
 
+# Exported JS values in Modules.
+# We need this because the minification will mangle / remove a bunch of symbols.
+exported_js_values = '["FS","ENV","IDBFS","callMain"]'
+
 # Extra link options that can be overridden by other cross files.
 extra_link_options = []
 
@@ -34,4 +38,4 @@ arch_tuple = 'wasm32-unknown'
 wrap_mode = 'nofallback'
 force_fallback_for = 'lua,pcre2,freetype2'
 c_args = ['-fPIC']
-c_link_args = ['-sALLOW_MEMORY_GROWTH=1', '-sINITIAL_MEMORY=' + initial_heap, '-sASYNCIFY', '-sASYNCIFY_ADVISE=' + asyncify_advise, '-sASYNCIFY_STACK_SIZE=' + asyncify_stack_size, '-sASYNCIFY_REMOVE=' + asyncify_ignores, '-sFORCE_FILESYSTEM=1', '-lidbfs.js', '-sEXIT_RUNTIME=1', '-sMALLOC=' + malloc_impl, '-sMAIN_MODULE=2', '-sEXPORTED_FUNCTIONS=' + exported_functions] + extra_link_options
+c_link_args = ['-sALLOW_MEMORY_GROWTH=1', '-sINITIAL_MEMORY=' + initial_heap, '-sASYNCIFY', '-sASYNCIFY_ADVISE=' + asyncify_advise, '-sASYNCIFY_STACK_SIZE=' + asyncify_stack_size, '-sASYNCIFY_REMOVE=' + asyncify_ignores, '-sFORCE_FILESYSTEM=1', '-lidbfs.js', '-sEXIT_RUNTIME=1', '-sMALLOC=' + malloc_impl, '-sMAIN_MODULE=2', '-sEXPORTED_FUNCTIONS=' + exported_functions, '-sEXPORTED_RUNTIME_METHODS=' + exported_js_values] + extra_link_options

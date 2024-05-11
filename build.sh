@@ -256,6 +256,9 @@ main() {
         --js-output=bundle.json.js --use-preload-cache --no-node --no-force \
         --use-preload-plugins --quiet
 
+    # we need to set Module=window.Module to use a global variable
+    sed -i '1s/^/var Module = window.Module;\n/' lite-xl/lite-xl.js
+    sed -i '1s/^/var Module = window.Module;\n/' bundle.json.js
     popd
 
     # build the shell
@@ -265,7 +268,7 @@ main() {
     else
         npm i -D
     fi
-    npm run build
+    BUNDLE_PATH="$rootdir/$xldir/bundle.json.js" LITE_XL_PATH="$rootdir/$xldir/lite-xl/lite-xl.js" npm run build
     popd
 
     # create the distribution
@@ -276,8 +279,8 @@ main() {
 
     # copy all the files
     cp -r "$rootdir/shell/dist/." "$output"
-    cp "$xldir/lite-xl/lite-xl.js" "$xldir/lite-xl/lite-xl.wasm" "$output/js"
-    cp "$xldir/bundle.json.js" "$xldir/bundle.json" "$output/js"
+    cp "$xldir/lite-xl/lite-xl.wasm" "$output/js"
+    cp "$xldir/bundle.json" "$output"
 }
 
 main "$@"
