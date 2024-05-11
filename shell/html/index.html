@@ -29,21 +29,29 @@
       aria-autocomplete="none"
       autofocus
     ></textarea>
-    <div class="modal" id="loading">
-      <h2>Loading...</h2>
-      <p>Status: <span id="status">Unknown</span></p>
-      <p>
-        If this page freezes, please check the console (F12/Ctrl+Shift+I) for
-        any errors.
-      </p>
-    </div>
-    <div class="modal" id="close">
-      <h2>Oops, Lite XL is closed!</h2>
-      <p>
-        If you didn't do this intentionally, please check the console
-        (F12/Ctrl+Shift+I) for any errors.
-      </p>
-      <p>You can refresh the page to load Lite XL again.</p>
+    <div class="modal" id="overlay">
+      <div class="modal message" id="loading">
+        <h2>Loading...</h2>
+        <p>Status: <span id="status">Loading...</span></p>
+        <p>
+          If this page freezes, please check the console (F12/Ctrl+Shift+I) for
+          any errors.
+        </p>
+      </div>
+
+      <div class="modal message" id="exit">
+        <h2>Oops, Lite XL is closed!</h2>
+        <p>You can refresh the page to load Lite XL again.</p>
+      </div>
+
+      <div class="modal message" id="exit_error">
+        <h2>Oops, Lite XL has crashed!</h2>
+        <p id="exit_status">Exit Status</p>
+        <p>
+          Please check the console (F12/Ctrl+Shift+I) for detailed information.
+        </p>
+        <p>You can refresh the page to load Lite XL again.</p>
+      </div>
     </div>
 
     <table class="sync_indicator">

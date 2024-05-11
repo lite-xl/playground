@@ -1,10 +1,4 @@
-html,
-body,
-canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-  margin: 0;
+body {
   font-family:
     system-ui,
     -apple-system,
@@ -17,7 +11,25 @@ canvas {
     "Open Sans",
     "Helvetica Neue",
     sans-serif;
-  text-align: center;
+  background-color: #fbfbfb;
+  color: #404040;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #2e2e32;
+    color: #97979c;
+  }
+}
+
+html,
+body,
+canvas,
+.modal {
+  width: 100%;
+  height: 100%;
+  display: block;
+  margin: 0;
 }
 
 canvas {
@@ -29,13 +41,22 @@ canvas {
 
 .modal {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  z-index: 50;
+  background-color: inherit;
 }
 
-#close {
+.modal.message {
+  top: 50%;
+  left: 50%;
+  width: fit-content;
+  height: fit-content;
+  transform: translate(-50%, -50%);
+  text-align: center;
   display: none;
+}
+
+#loading {
+  display: block;
 }
 
 .sync_indicator {

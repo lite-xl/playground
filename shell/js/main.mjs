@@ -13,6 +13,28 @@ window.Module = {
   arguments: [],
 };
 
+/**
+ * Shows one of the overlays.
+ * @param {string} overlayName
+ */
+function showOverlay(overlayName) {
+  document
+    .querySelectorAll("#overlay div")
+    .forEach(
+      (el) => (el.style.display = el.id === overlayName ? "block" : "none")
+    );
+  document.getElementById("overlay").style.display = "block";
+  document.getElementById("canvas").style.display = "none";
+}
+
+/**
+ * Hides all overlays.
+ */
+function hideOverlay() {
+  document.getElementById("overlay").style.display = "none";
+  document.getElementById("canvas").style.display = "block";
+}
+
 let storageReady, runtimeReady, started;
 /**
  * Starts Lite XL.
@@ -21,11 +43,13 @@ function start() {
   if (runtimeReady && storageReady && !started) {
     started = true;
     console.log("Starting Lite XL...");
-    document.getElementById("loading").style.display = "none";
     FS.chdir("/home/web_user");
 
     // set up autosave
     Module.idbSync.start();
+    // disable canvas context menu
+    Module.canvas.oncontextmenu = (e) => e.preventDefault();
+    hideOverlay();
     Module.callMain(Module.arguments);
   }
 }
@@ -54,10 +78,14 @@ Module.preRun.push(() => {
     }
   });
 });
-Module.onExit = () => {
-  document.getElementById("loading").style.display = "none";
-  document.getElementById("canvas").style.display = "none";
-  document.getElementById("close").style.display = "block";
+Module.onExit = (status) => {
+  if (status === 0) {
+    showOverlay("exit");
+  } else {
+    document.getElementById("exit_status").textContent =
+      `Program exited with status ${status}`;
+    showOverlay("exit_error");
+  }
   Module.idbSync.stop();
 };
 Module.onRuntimeInitialized = () => {
@@ -86,9 +114,10 @@ function addInput(e) {
 
 // attach canvas to module
 window.addEventListener("load", () => {
+  showOverlay("loading");
+
   const status = document.getElementById("status");
   Module.canvas = document.getElementById("canvas");
-  Module.canvas.oncontextmenu = (e) => e.preventDefault();
   Module.setStatus = (s) => {
     status.textContent = s === "" ? "Initializing..." : s;
   };
@@ -110,6 +139,20 @@ window.addEventListener("load", () => {
     } else if (!e.isComposing) addInput(e);
   });
 });
+
+function handleError(e) {
+  if (started) {
+    document.getElementById("exit_status").textContent = e.message;
+    showOverlay("exit_error");
+  } else {
+    Module.setStatus(e.message || e.reason);
+    showOverlay("loading");
+  }
+  console.error(e.error || e.reason);
+}
+
+window.addEventListener("error", handleError);
+window.addEventListener("unhandledrejection", handleError);
 
 // require the bundle loader and lite-xl itself, the actual paths are
 // handled by esbuild script itself.
