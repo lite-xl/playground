@@ -19,10 +19,10 @@ if ! command -v file_packager >/dev/null 2>&1; then
             echo "error: cannot find file_packager"
             exit 1
         fi
-        # find file_packager by using emcc
-        emcc_abs_path="$(readlink -f "$(command -v emcc)")"
-        file_packager="$(readlink -f "$(dirname "${emcc_abs_path}")/tools/file_packager")"
     fi
+    # find file_packager by using emcc
+    emcc_abs_path="$(readlink -f "$(command -v emcc)")"
+    file_packager="$(readlink -f "$(dirname "${emcc_abs_path}")/tools/file_packager")"
 fi
 
 build_dir=$(get_default_build_dir "emscripten" "wasm32")
