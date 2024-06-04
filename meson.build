@@ -65,6 +65,75 @@ lite_cargs += '-DLITE_ARCH_TUPLE="@0@"'.format(arch_tuple)
 lite_link_args = []
 if host_machine.system() == 'darwin'
     lite_link_args += ['-framework', 'CoreServices', '-framework', 'Foundation']
+elif host_machine.system() == 'emscripten'
+    # ignore these functions when instrumenting asyncify
+    asyncify_ignores = [
+        'SDL_BlitScaled',
+        'SDL_UpperBlitScaled',
+        'SDL_MapRGB*',
+        'SDL_FillRect',
+        'SDL_FreeSurface',
+        'SDL_CreateRGBSurface',
+        'SDL_GetWindowSurface',
+        'SDL_PollEvent',
+        'SDL_CreateSystemCursor',
+        'SDL_SetWindowTitle',
+        'SDL_SetCursor',
+        'SDL_GetWindowSize',
+        'SDL_GetWindowPosition',
+        'lua_push*',
+        'lua_rawget*',
+        'luaL_check*',
+        'pcre2*',
+        'FT_*',
+        'Bezier_*',
+        'g_*',
+        'FT_*',
+        'ft_*',
+        'TT_*',
+        'tt_*',
+        '__*',
+        '*printf',
+        'gray_*',
+        'fopen',
+        'fclose',
+        'fread',
+        'fflush',
+        'qsort',
+        'sift'
+    ]
+    lite_link_args += [
+        '-O3',
+        '-s', 'ALLOW_MEMORY_GROWTH=1',
+        '-s', 'ASYNCIFY=1',
+        '-s', 'ASYNCIFY_REMOVE=@0@'.format(','.join(asyncify_ignores)),
+        '-s', 'ENVIRONMENT=web,worker',
+        '-s', 'EXIT_RUNTIME=1',
+        '-s', 'EXPORTED_FUNCTIONS=["_main"]',
+        '-s', 'EXPORTED_RUNTIME_METHODS=["ccall"]',
+        '-s', 'FILESYSTEM=1',
+        '-s', 'FORCE_FILESYSTEM=1',
+        '-s', 'IGNORE_MISSING_MAIN=0',
+        '-s', 'INITIAL_MEMORY=104857600',
+        '-s', 'MODULARIZE=0',
+        '-s', 'STACK_SIZE=1MB',
+        '-s', 'STRICT_JS=1',
+        '-s', 'SUPPORT_BIG_ENDIAN=1',
+        '-s', 'WASM=1',
+        # workaround for SDL2
+        '-s', 'EXPORTED_RUNTIME_METHODS=ALLOC_NORMAL,allocate',
+        '-lidbfs.js',
+        # fix errno codes being minimized
+        '-sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE=$ERRNO_CODES',
+        '--minify', '0',
+        '--pre-js', meson.current_source_dir() / 'src' / 'pre.js',
+    ]
+    if get_option('wasm_preload_files')
+        lite_link_args += [
+            '--preload-file',
+            meson.current_source_dir() / 'data@/usr/share/lite-xl/'
+        ]
+    endif
 endif
 #===============================================================================
 # Dependencies
@@ -105,8 +174,13 @@ if not get_option('source-only')
         )
     endif
 
+    pcre2_options = ['default_library=static', 'grep=false', 'test=false']
+    if host_machine.system() == 'emscripten'
+        pcre2_options += ['jit=disabled', 'jit_sealloc=disabled']
+    endif
+
     pcre2_dep = dependency('libpcre2-8', fallback: ['pcre2', 'libpcre2_8'],
-        default_options: default_fallback_options + ['default_library=static', 'grep=false', 'test=false']
+        default_options: default_fallback_options + pcre2_options
     )
 
     freetype_dep = dependency('freetype2', fallback: ['freetype2', 'freetype_dep'],
@@ -117,17 +191,23 @@ if not get_option('source-only')
     sdl_options = ['default_library=static']
 
     # we explicitly need these
-    sdl_options += 'use_loadso=enabled'
-    sdl_options += 'prefer_dlopen=true'
+    if host_machine.system() == 'emscripten'
+        sdl_options += 'use_loadso=disabled'
+        sdl_options += 'prefer_dlopen=false'
+        sdl_options += 'use_threads=disabled'
+    else
+        sdl_options += 'use_loadso=enabled'
+        sdl_options += 'prefer_dlopen=true'
+        sdl_options += 'use_threads=enabled'
+    endif
     sdl_options += 'use_video=enabled'
     sdl_options += 'use_atomic=enabled'
-    sdl_options += 'use_threads=enabled'
     sdl_options += 'use_timers=enabled'
     # investigate if this is truly needed
     # Do not remove before https://github.com/libsdl-org/SDL/issues/5413 is released
     sdl_options += 'use_events=enabled'
 
-    if host_machine.system() == 'darwin' or host_machine.system() == 'windows'
+    if host_machine.system() == 'darwin' or host_machine.system() == 'windows' or host_machine.system() == 'emscripten'
         sdl_options += 'use_video_x11=disabled'
         sdl_options += 'use_video_wayland=disabled'
     else
@@ -179,7 +259,7 @@ endif
 #===============================================================================
 # Install Configuration
 #===============================================================================
-if get_option('portable') or host_machine.system() == 'windows'
+if get_option('portable') or host_machine.system() == 'windows' or host_machine.system() == 'emscripten'
     lite_bindir = '/'
     lite_docdir = '/doc'
     lite_datadir = '/data'
@@ -222,12 +302,28 @@ else
     endif
 endif
 
+excluded_plugins = []
+
+if host_machine.system() != 'emscripten'
+    excluded_plugins += [
+        'wasm_add_project_folder.lua',
+        'wasm_borderless.lua',
+        'wasm_files.lua',
+        'wasm_input.lua',
+        'wasm_sync.lua',
+        'wasm_treeview.lua',
+        'wasm_workspace.lua'
+    ]
+endif
+
 install_data('licenses/licenses.md', install_dir : lite_docdir)
 
-install_subdir('docs/api' , install_dir : lite_datadir, strip_directory: true)
+if host_machine.system() != 'emscripten'
+    install_subdir('docs/api' , install_dir : lite_datadir, strip_directory: true)
+endif
 install_subdir('data/core' , install_dir : lite_datadir, exclude_files : 'start.lua')
 foreach data_module : ['fonts', 'plugins', 'colors']
-    install_subdir(join_paths('data', data_module), install_dir : lite_datadir)
+    install_subdir(join_paths('data', data_module), install_dir : lite_datadir, exclude_files: excluded_plugins)
 endforeach
 
 configure_file(
@@ -239,5 +335,8 @@ configure_file(
 
 if not get_option('source-only')
     subdir('src')
+    if host_machine.system() == 'emscripten'
+        subdir('shell')
+    endif
     subdir('scripts')
 endif
