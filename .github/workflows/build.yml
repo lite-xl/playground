@@ -54,6 +54,10 @@ jobs:
       - name: Install meson
         run: pip install meson ninja
 
+      # prevent running 4 npm ci commands at once
+      - name: Install node dependencies
+        run: cd shell; npm ci
+
       - name: Build
         run: bash -x scripts/gh-pages-deploy.sh
 
