@@ -1,0 +1,57 @@
+@import "./theme.css";
+
+html,
+body,
+canvas,
+.modal {
+  width: 100%;
+  height: 100%;
+  display: block;
+  margin: 0;
+}
+
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 5;
+}
+
+.modal {
+  position: fixed;
+  z-index: 50;
+  background-color: inherit;
+}
+
+.modal.message {
+  top: 50%;
+  left: 50%;
+  width: fit-content;
+  height: fit-content;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  display: none;
+}
+
+#loading {
+  display: block;
+}
+
+.hidden {
+  width: 0;
+  height: 0;
+  border: 0;
+  position: fixed;
+  z-index: -1;
+}
+
+#textinput {
+  position: absolute;
+  z-index: 0;
+  border: none;
+  background-color: transparent;
+  resize: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+}
