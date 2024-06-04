@@ -11,6 +11,10 @@ lite_sources = [
     'main.c',
 ]
 
+if host_machine.system() == 'emscripten'
+    lite_sources += 'api/wasm.c'
+endif
+
 lite_sources += 'api/dirmonitor.c'
 # dirmonitor backend
 if get_option('dirmonitor_backend') == ''
@@ -66,8 +70,9 @@ endif
 
 lite_includes += include_directories('.')
 
-executable('lite-xl',
+lite_exe = executable('lite-xl',
     lite_sources + lite_rc,
+    extra_files: ['pre.js'],
     include_directories: lite_includes,
     dependencies: lite_deps,
     c_args: lite_cargs,
