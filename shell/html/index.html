@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="./favicon.png" sizes="128x128" />
+    <title>Lite XL</title>
+
+    <meta property="og:title" content="Try Lite XL" />
+    <meta property="og:url" content="https://lite-xl.com/playground" />
+    <meta property="og:site_name" content="Lite XL" />
+    <meta property="og:description" content="Try Lite XL in your Browser!" />
+
+    <link rel="stylesheet" href="./css/main.css" />
+    <script src="./lite-xl-files.min.js"></script>
+    <script src="./main.js"></script>
+  </head>
+
+  <body>
+    <canvas id="canvas"></canvas>
+    <textarea
+      id="textinput"
+      class="hidden"
+      aria-hidden="true"
+      autocapitalize="off"
+      spellcheck="false"
+      autocorrect="off"
+      autocomplete="off"
+      aria-autocomplete="none"
+      autofocus
+    ></textarea>
+    <div class="modal" id="overlay">
+      <div class="modal message" id="loading">
+        <h2>Loading...</h2>
+        <p>Status: <span id="status">Loading...</span></p>
+        <p>
+          If this page freezes, please check the console (F12/Ctrl+Shift+I) for
+          any errors. <br />
+          If you continue to face issues, you can try to
+          <a href="./advanced">clear the cache.</a>
+        </p>
+      </div>
+
+      <div class="modal message" id="exit">
+        <h2>Oops, Lite XL is closed!</h2>
+        <p>You can refresh the page to load Lite XL again.</p>
+      </div>
+
+      <div class="modal message" id="exit_error">
+        <h2>Oops, Lite XL has crashed!</h2>
+        <p id="exit_status">Exit Status</p>
+        <p>
+          Please check the console (F12/Ctrl+Shift+I) for detailed information.
+        </p>
+        <p>
+          You can refresh the page to load Lite XL again.
+          <br />If you continue to face issues, you can try to
+          <a href="./advanced">clear the cache.</a>
+        </p>
+      </div>
+    </div>
+    <noscript>
+      <p>You need to enable JavaScript and WASM for this page to work.</p>
+    </noscript>
+  </body>
+</html>
