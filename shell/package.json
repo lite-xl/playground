@@ -1,0 +1,23 @@
+{
+  "name": "playground-shell",
+  "version": "1.0.0",
+  "description": "The shell for Lite XL WASM Playground",
+  "main": "esbuild.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier -w *.js **/*.js **/*.css **/*.html",
+    "build:bundle": "node build.js",
+    "build:html": "cp -r html/. favicon.png dist",
+    "build": "npm run build:bundle && npm run build:html"
+  },
+  "author": "takase1121",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.21.1",
+    "google-closure-compiler": "^20240317.0.0",
+    "prettier": "^3.2.5"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2"
+  }
+}
