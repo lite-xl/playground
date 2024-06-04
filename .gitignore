@@ -20,6 +20,9 @@ error.txt
 lite-xl*
 LiteXL*
 
+shell/node_modules
+github-pages.tar
+
 !resources/windows/*.diff
 !resources/windows/*.exe.manifest.in
 !resources/macos/*.py
