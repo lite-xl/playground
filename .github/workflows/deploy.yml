@@ -1,0 +1,71 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy the output to GitHub Pages
+        type: choice
+        required: true
+        default: 'true'
+        options:
+          - true
+          - false
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      # TODO: fix cache
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.64
+          # actions-cache-folder: emsdk-cache
+
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: shell/package-lock.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+            python-version: '3.x'
+
+      - name: Install meson
+        run: pip install meson ninja
+
+      - name: Build
+        run: bash scripts/gh-pages-deploy.sh
+
+      - name: Upload pages artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: github-pages.tar
+          if-no-files-found: error
+
+      - name: Deploy
+        id: deployment
+        if: ${{ github.event.inputs.deploy == 'true' }}
+        uses: actions/deploy-pages@v4
