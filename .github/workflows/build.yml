@@ -2,14 +2,15 @@ name: Deploy
 
 on:
   workflow_dispatch:
-    deploy:
-      description: Deploy the output to GitHub Pages
-      type: choice
-      required: true
-      default: 'true'
-      options:
-        - true
-        - false
+    inputs:
+      deploy:
+        description: Deploy the output to GitHub Pages
+        type: choice
+        required: true
+        default: 'true'
+        options:
+          - true
+          - false
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
