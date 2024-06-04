@@ -1,8 +1,32 @@
 -- mod-version:3
+
+-- This is a modification of the workspace plugin that supports autosync better.
+
 local core = require "core"
+local config = require "core.config"
 local common = require "core.common"
 local DocView = require "core.docview"
 local LogView = require "core.logview"
+local RootView = require "core.rootview"
+
+
+config.plugins.wasm_workspace = common.merge({
+  -- keep the last n workspace files for a project
+  keep_last_workspaces = 5,
+  -- config spec for settings UI
+  config_spec = {
+    name = "Workspace",
+    {
+      label = "Keep Last Workspaces",
+      description = "Keep the last N number of workspaces and delete others that are too old.",
+      path = "keep_last_workspaces",
+      type = "number",
+      default = 5,
+      min = 2,
+      max = 100,
+    },
+  },
+}, config.plugins.wasm_workspace)
 
 
 local function workspace_files_for(project_dir)
@@ -31,13 +55,19 @@ end
 
 
 local function consume_workspace_file(project_dir)
+  -- consume the latest workspace file
+  local latest_file, latest_id = nil, -1
   for filename, id in workspace_files_for(project_dir) do
-    local load_f = loadfile(filename)
-    local workspace = load_f and load_f()
-    if workspace and workspace.path == project_dir then
-      os.remove(filename)
-      return workspace
+    if id > latest_id then
+      latest_file = filename
+      latest_id = id
     end
+  end
+  local load_f = loadfile(latest_file)
+  local workspace = load_f and load_f()
+  if workspace and workspace.path == project_dir then
+    os.remove(latest_file)
+    return workspace
   end
 end
 
@@ -45,14 +75,12 @@ end
 local function get_workspace_filename(project_dir)
   local id_list = {}
   for filename, id in workspace_files_for(project_dir) do
-    id_list[id] = true
+    id_list[#id_list + 1] = { filename = filename, id = id }
   end
-  local id = 1
-  while id_list[id] do
-    id = id + 1
-  end
+  table.sort(id_list, function (a, b) return a.id > b.id end)
+  local id = #id_list == 0 and 1 or (id_list[1].id + 1)
   local basename = common.basename(project_dir)
-  return USERDIR .. PATHSEP .. "ws" .. PATHSEP .. basename .. "-" .. tostring(id)
+  return USERDIR .. PATHSEP .. "ws" .. PATHSEP .. basename .. "-" .. tostring(id), id_list
 end
 
 
@@ -166,7 +194,7 @@ local function load_node(node, t)
           active_view = view
         end
         if not view:is(DocView) then
-          view.scroll = v.scroll	
+          view.scroll = v.scroll
         end
       end
     end
@@ -187,7 +215,7 @@ end
 local function save_directories()
   local project_dir = core.project_dir
   local dir_list = {}
-  for i = 2, #core.project_directories do
+  for i = 1, #core.project_directories do
     dir_list[#dir_list + 1] = common.relative_path(project_dir, core.project_directories[i].name)
   end
   return dir_list
@@ -196,7 +224,12 @@ end
 
 local function save_workspace()
   local root = get_unlocked_root(core.root_view.root_node)
-  local workspace_filename = get_workspace_filename(core.project_dir)
+  local workspace_filename, files = get_workspace_filename(core.project_dir)
+  local remove = #files - config.plugins.wasm_workspace.keep_last_workspaces + 1
+  for _ = 1, remove do
+    local file = table.remove(files)
+    os.remove(file.filename)
+  end
   local fp = io.open(workspace_filename, "w")
   if fp then
     local node_text = common.serialize(save_node(root))
@@ -215,10 +248,24 @@ local function load_workspace()
     if active_view then
       core.set_active_view(active_view)
     end
+    local directories = {}
+    for _, project in ipairs(core.project_directories) do
+      directories[project.name] = true
+    end
     for i, dir_name in ipairs(workspace.directories) do
-      core.add_project_directory(system.absolute_path(dir_name))
+      local dir = system.absolute_path(dir_name)
+      if not directories[dir] then
+        core.add_project_directory(dir)
+      end
     end
   end
+end
+
+
+local rootview_update = RootView.update
+function RootView:update()
+  rootview_update(self)
+  core.try(save_workspace)
 end
 
 
@@ -244,3 +291,6 @@ function core.run(...)
   core.run = run
   return core.run(...)
 end
+
+
+return save_workspace
