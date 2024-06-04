@@ -1,3 +1,29 @@
+# Lite XL Playground
+
+This repository contains files needed to run Lite XL in the browser.
+Lite XL includes a shell file that does the job pretty well,
+but the aim here is to improve the experience more by making it actually
+useful.
+
+## Instructions
+
+This repository is still a work-in-progress, so detailed instructions on how
+to set up everything is not available.
+
+In general, you will need the following tools:
+
+- Emscripten (optionally emsdk) 3.1.57 and newer. Older versions will not work.
+- file_packager (Installed with Emscripten if emsdk is used)
+- A HTTP Server (I use `http-server`, but Python's `http.server` will work with caveats.)
+- Git
+- Bash (MSYS2 might work but not tested)
+- npm
+
+You can find specific documentation in each subfolder.
+
+<details>
+<summary>Original README</summary>
+
 # Lite XL
 
 [![CI]](https://github.com/lite-xl/lite-xl/actions/workflows/build.yml)
@@ -237,3 +263,5 @@ See the [licenses] file for details on licenses used by the required dependencie
 [colors repository]:          https://github.com/lite-xl/lite-xl-colors
 [LICENSE]:                    LICENSE
 [licenses]:                   licenses/licenses.md
+
+</details>
