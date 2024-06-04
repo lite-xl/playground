@@ -250,6 +250,10 @@ function core.add_project_directory(path)
   -- will be simply the name of the directory, without its path.
   -- The field item.topdir will identify it as a top level directory.
   path = common.normalize_volume(path)
+  -- do not add duplicate entries
+  for _, dir in ipairs(core.project_directories) do
+    if dir.name == path then return end
+  end
   local topdir = {
     name = path,
     item = {filename = common.basename(path), type = "dir", topdir = true},
