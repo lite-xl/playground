@@ -59,7 +59,7 @@ jobs:
         run: cd shell; npm ci
 
       - name: Build
-        run: bash -x scripts/gh-pages-deploy.sh
+        run: bash scripts/gh-pages-deploy.sh
 
       - name: Upload pages artifact
         uses: actions/upload-artifact@v4
