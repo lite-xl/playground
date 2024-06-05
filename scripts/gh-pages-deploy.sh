@@ -51,7 +51,7 @@ $file_packager "${dest_dir}/lite-xl-files.json" \
     --no-force --no-node --use-preload-cache --use-preload-plugins \
     --quiet --js-output="${dest_dir}/lite-xl-files.js"
 # this file is rather big, run closure compiler over the output
-node shell/closure.js "${dest_dir}/lite-xl-files.min.js" "${dest_dir}/lite-xl-files.js"
+node shell/esbuild.js "${dest_dir}/lite-xl-files.min.js" true "${dest_dir}/lite-xl-files.js"
 # these files can be removed for final distribution
 rm -rf "$(pwd)/${dest_dir}/lite-xl.js" "$(pwd)/${dest_dir}/lite-xl-files.js" \
         "${data_dir}" "$(pwd)/${dest_dir}/doc"
