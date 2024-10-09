@@ -63,6 +63,7 @@ local function consume_workspace_file(project_dir)
       latest_id = id
     end
   end
+  if not latest_file then return end
   local load_f = loadfile(latest_file)
   local workspace = load_f and load_f()
   if workspace and workspace.path == project_dir then
