@@ -26,7 +26,7 @@ if ! command -v file_packager >/dev/null 2>&1; then
 fi
 
 build_dir=$(get_default_build_dir "emscripten" "wasm32")
-dest_dir=lite-xl
+dest_dir=github-pages
 
 # install node deps
 if ! [[ -d shell/node_modules ]]; then
@@ -62,12 +62,3 @@ node shell/closure.js "${dest_dir}/lite-xl-files.min.js" "${dest_dir}/lite-xl-fi
 # these files can be removed for final distribution
 rm -rf "$(pwd)/${dest_dir}/lite-xl.js" "$(pwd)/${dest_dir}/lite-xl-files.js" \
         "${data_dir}" "$(pwd)/${dest_dir}/doc"
-
-package_name="github-pages"
-echo "Creating a compressed archive ${package_name}"
-
-tar \
-    --dereference --hard-dereference \
-    --directory "${dest_dir}" \
-    -cvf "$(pwd)/${package_name}.tar" \
-    .
