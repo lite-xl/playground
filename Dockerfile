@@ -1,28 +1,16 @@
-FROM archlinux:base-devel AS build
+FROM emscripten/emsdk:latest AS build
 
-RUN pacman -Syu --noconfirm meson git emscripten jre-openjdk-headless unzip npm
+USER emscripten
 
-# Uncomment if you want emsdk
-# RUN useradd -m --shell=/bin/false build && \
-#     usermod -L build && \
-#     echo "build ALL= NOPASSWD: /usr/bin/pacman" > /etc/sudoers.d/build
-#
-# USER build
-#
-# WORKDIR /home/build
-#
-# RUN git clone https://aur.archlinux.org/emsdk.git && \
-#     cd emsdk && makepkg -sfi --noconfirm
-#
-# USER root
+ENV PATH="$PATH:/home/emscripten/.local/bin"
+
+RUN pip install meson ninja
 
 WORKDIR /build
 
-COPY . .
+COPY --chown=emscripten . .
 
-RUN rm -rf build-emscripten-wasm32 github-pages && \
-    source /etc/profile.d/emscripten.sh && \
-    bash scripts/gh-pages-deploy.sh
+RUN bash scripts/gh-pages-deploy.sh
 
 FROM nginx:latest
 
