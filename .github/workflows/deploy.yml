@@ -70,7 +70,7 @@ jobs:
           push-to-registry: true
 
       - name: Prepare pages artifact
-        run: tar --dereference --hard-dereference -cf github-pages.tar --directory out/usr/share/nginx/html .
+        run: tar --dereference --hard-dereference -cf github-pages.tar --directory out/www .
 
       - name: Upload pages artifact
         uses: actions/upload-artifact@v4
