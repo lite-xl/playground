@@ -21,5 +21,5 @@ custom_target(
     install: true,
     install_dir: lite_bindir,
     # esbuild only needs the entrypoint to figure out what files to bundle
-    command: [node_exe, esbuild_script, '@OUTPUT@', 'true', 'true', '@INPUT0@'],
+    command: [node_exe, esbuild_script, '@OUTPUT@', 'true', '@INPUT0@'],
 )
