@@ -1,5 +1,3 @@
-esbuild_exe = find_program('esbuild', required: true)
-
 custom_target(
     'main.js',
     input: [lite_exe, 'main.js'],

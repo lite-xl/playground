@@ -14,10 +14,6 @@
   "license": "MIT",
   "devDependencies": {
     "esbuild": "^0.21.1",
-    "google-closure-compiler": "^20240317.0.0",
     "prettier": "^3.2.5"
-  },
-  "dependencies": {
-    "fflate": "^0.8.2"
   }
 }
