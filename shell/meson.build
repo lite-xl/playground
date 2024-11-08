@@ -1,12 +1,15 @@
+npm_exe = find_program('npm')
 node_exe = find_program('node')
+esbuild_exe = [npm_exe, '--prefix', meson.current_source_dir(), 'exec', '-y', '--', 'esbuild']
 
 package_lock = meson.current_source_dir() / 'package-lock.json'
-esbuild_script = meson.current_source_dir() / 'esbuild.js'
-esbuild_concat_script = meson.current_source_dir() / 'esbuild-concat.js'
 
-node_modules_dep = [
-    meson.current_source_dir() / 'node_modules/esbuild/package.json',
-]
+esbuild_dep = custom_target(
+    'esbuild',
+    input: 'package.json',
+    output: 'node_modules',
+    command: [npm_exe, '--prefix', meson.current_source_dir(), 'ci']
+)
 
 subdir('js')
 subdir('css')

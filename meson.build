@@ -109,7 +109,7 @@ elif host_machine.system() == 'emscripten'
         '-s', 'ASYNCIFY=1',
         '-s', 'ASYNCIFY_REMOVE=@0@'.format(','.join(asyncify_ignores)),
         '-s', 'ENVIRONMENT=web,worker',
-        '-s', 'EXIT_RUNTIME=1',
+        '-s', 'EXIT_RUNTIME=0',
         '-s', 'EXPORTED_FUNCTIONS=["_main"]',
         '-s', 'EXPORTED_RUNTIME_METHODS=["ccall"]',
         '-s', 'FILESYSTEM=1',
@@ -335,7 +335,38 @@ configure_file(
     install_dir : join_paths(lite_datadir, 'core'),
 )
 
+file_bundle = []
 if not get_option('source-only')
+    # build bundles
+    if host_machine.system() == 'emscripten' and get_option('wasm_build_bundle')
+        bash_exe = find_program('bash', required: true)
+        bundle_args = [
+            '-p', meson.current_source_dir() / 'data',
+            '-i', meson.current_source_dir() / 'welcome.md@welcome.md',
+            '-i', 'start.lua@core/start.lua',
+            '-e', 'core/start.lua'
+        ]
+
+        foreach data_module : ['fonts', 'plugins', 'colors', 'core']
+            bundle_args += [
+                '-i', (meson.current_source_dir() / 'data' / data_module) + '@' + data_module
+            ]
+            foreach excluded_file: excluded_plugins
+                bundle_args += ['-e', meson.current_source_dir() / 'data' / data_module / excluded_file]
+            endforeach
+        endforeach
+
+        file_bundle += custom_target(
+            'wasm-bundle',
+            input: ['meson.build'],
+            output: ['lite-xl-files.js', 'lite-xl-files.json'],
+            command: [bash_exe, meson.current_source_dir() / 'scripts/generate_wasm_bundle.sh', '-d', '@OUTPUT1@', '-j', '@OUTPUT0@'] + bundle_args,
+            build_by_default: true,
+            build_always_stale: true,
+            install: true,
+            install_dir: lite_bindir
+        )
+    endif
     subdir('src')
     if host_machine.system() == 'emscripten'
         subdir('shell')

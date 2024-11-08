@@ -1,3 +1,4 @@
+Module["addRunDependency"]();
 
 /**
  * Shows one of the overlays.
@@ -22,16 +23,20 @@ function hideOverlay() {
 }
 
 Module["preRun"].push(function () {
-  Module["addRunDependency"]();
+  Module["addRunDependency"]("mountHome");
+  ENV["LITE_SCALE"] = window.devicePixelRatio.toString();
+
   ["/home", "/home/web_user"].forEach(p => {
-      try { FS.mkdir(p); } catch (err) { }
+    try { FS.mkdir(p); } catch (err) { }
   });
   FS.mount(IDBFS, { autoPersist: true }, "/home/web_user");
   FS.syncfs(true, function (err) {
-      Module["removeRunDependency"]();
-      if (err) {
-          console.error("cannot sync IDBFS():", err);
-      }
+    if (err) {
+      console.error("cannot sync IDBFS():", err);
+    } else {
+      FS.chdir("/home/web_user");
+    }
+    Module["removeRunDependency"]("mountHome");
   });
 });
 
@@ -96,6 +101,8 @@ window.addEventListener("load", () => {
       window.dispatchEvent(new KeyboardEvent("keyup", ev));
     } else if (!e.isComposing) addInput(e);
   });
+
+  Module["removeRunDependency"]();
 });
 
 function handleError(e) {

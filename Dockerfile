@@ -1,5 +1,8 @@
 FROM emscripten/emsdk:3.1.70 AS build
 
+RUN apt update && apt upgrade -y && apt install -y rsync \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*;
+
 USER emscripten
 
 ENV PATH="$PATH:/home/emscripten/.local/bin"

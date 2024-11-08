@@ -1,23 +1,27 @@
 custom_target(
     'main.js',
-    input: [lite_exe, 'main.js'],
+    input: [file_bundle[0], lite_exe, 'main.js'],
     output: 'main.js',
-    build_by_default: true,
-    depend_files: [package_lock, esbuild_concat_script, node_modules_dep],
+    depends: [esbuild_dep],
+    depend_files: [package_lock],
     install: true,
     install_dir: lite_bindir,
-    # the first must be the entrypoint
-    command: [node_exe, esbuild_concat_script, '@OUTPUT@', 'entrypoint', 'true', '@INPUT@']
+    command: [node_exe, meson.current_source_dir() / 'amalgamate.js', '@OUTPUT@', '@INPUT@']
 )
 
 custom_target(
     'advanced.js',
     input: 'advanced.js',
     output: 'advanced.js',
-    depend_files: [package_lock, esbuild_script, node_modules_dep],
+    depends: [esbuild_dep],
+    depend_files: [package_lock],
     build_by_default: true,
     install: true,
     install_dir: lite_bindir,
     # esbuild only needs the entrypoint to figure out what files to bundle
-    command: [node_exe, esbuild_script, '@OUTPUT@', 'true', '@INPUT0@'],
+    command: [
+        esbuild_exe,
+        '--bundle', '--minify',
+        '@INPUT0@', '--outfile=@OUTPUT@',
+    ]
 )

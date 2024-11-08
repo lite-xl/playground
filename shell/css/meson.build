@@ -7,9 +7,13 @@ foreach css: css_src
     custom_target(css,
                     input: css,
                     output: css,
-                    depend_files: ['theme.css', '../package-lock.json', '../esbuild.js'],
+                    depends: [esbuild_dep],
+                    depend_files: [package_lock, 'theme.css'],
                     install: true,
                     install_dir: lite_bindir / 'css',
-                    # esbuild only needs the entrypoint to figure out what files to bundle
-                    command: [node_exe, esbuild_script, '@OUTPUT@', 'true', '@INPUT0@'])
+                    command: [
+                        esbuild_exe,
+                        '--bundle',
+                        '@INPUT@', '--outfile=@OUTPUT@',
+                    ])
 endforeach

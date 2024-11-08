@@ -36,7 +36,7 @@ if ! [[ -d shell/node_modules ]]; then
 fi
 
 if [[ ! -d "$build_dir" ]]; then
-    meson setup "$build_dir" --cross-file resources/cross/unknown-wasm32.txt -Dwasm_preload_files=false
+    meson setup "$build_dir" --cross-file resources/cross/unknown-wasm32.txt -Dwasm_preload_files=false -Dwasm_build_bundle=true
 fi
 
 meson compile -C "$build_dir"
@@ -44,23 +44,4 @@ meson compile -C "$build_dir"
 if [ -d "${dest_dir}" ]; then
     find "${dest_dir}" -mindepth 1 -delete
 fi
-DESTDIR="$(pwd)/${dest_dir}" meson install --skip-subprojects -C "${build_dir}"
-
-data_dir="$(pwd)/${dest_dir}/data"
-mkdir -p "${data_dir}"
-addons_download "${build_dir}"
-addons_install "${build_dir}" "${data_dir}"
-
-echo "Creating a portable, compressed archive..."
-# the name is wasm to trick reverse proxies into compressing them
-$file_packager "${dest_dir}/lite-xl-files.json" \
-    --preload "${dest_dir}/data@/usr/share/lite-xl" \
-    --preload "${dest_dir}/doc/licenses.md@/usr/share/licenses/lite-xl/licenses.md" \
-    --preload "welcome.md@/usr/share/lite-xl/welcome.md" \
-    --no-force --no-node --use-preload-cache --use-preload-plugins \
-    --quiet --js-output="${dest_dir}/lite-xl-files.js"
-# this file is rather big, run closure compiler over the output
-node shell/esbuild-concat.js "${dest_dir}/lite-xl-files.min.js" "lite-xl-files.js" "true" "${dest_dir}/lite-xl-files.js"
-# these files can be removed for final distribution
-rm -rf "$(pwd)/${dest_dir}/lite-xl.js" "$(pwd)/${dest_dir}/lite-xl-files.js" \
-        "${data_dir}" "$(pwd)/${dest_dir}/doc"
+DESTDIR="$(pwd)/${dest_dir}" meson install --no-rebuild --skip-subprojects -C "${build_dir}"
