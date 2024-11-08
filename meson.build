@@ -1,10 +1,11 @@
 project('lite-xl',
-    ['c'],
+    ['c', 'cpp'],
     version : '2.1.5',
     license : 'MIT',
     meson_version : '>= 0.63',
     default_options : [
-        'c_std=gnu11'
+        'c_std=gnu11',
+        'cpp_std=gnu++17'
     ]
 )
 
@@ -117,9 +118,9 @@ elif host_machine.system() == 'emscripten'
         '-s', 'INITIAL_MEMORY=104857600',
         '-s', 'MODULARIZE=0',
         '-s', 'STACK_SIZE=1MB',
-        '-s', 'STRICT_JS=1',
         '-s', 'SUPPORT_BIG_ENDIAN=1',
         '-s', 'WASM=1',
+        '-fexceptions',
         # workaround for SDL2
         '-s', 'EXPORTED_RUNTIME_METHODS=ALLOC_NORMAL,allocate',
         '-lidbfs.js',
@@ -141,6 +142,7 @@ endif
 if not get_option('source-only')
     libm = cc.find_library('m', required : false)
     libdl = cc.find_library('dl', required : false)
+    libembind = cc.find_library('embind', required : true)
 
     default_fallback_options = ['warning_level=0', 'werror=false']
 
@@ -254,7 +256,7 @@ if not get_option('source-only')
         assert(not sdlmain_dep.found(), 'checking if fake dependency has been found')
     endif
 
-    lite_deps = [lua_dep, sdl_dep, sdlmain_dep, freetype_dep, pcre2_dep, libm, libdl]
+    lite_deps = [lua_dep, sdl_dep, sdlmain_dep, freetype_dep, pcre2_dep, libm, libdl, libembind]
 endif
 #===============================================================================
 # Install Configuration

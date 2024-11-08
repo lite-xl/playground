@@ -41,7 +41,9 @@ fi
 
 meson compile -C "$build_dir"
 
-rm -rf "${dest_dir}"
+if [ -d "${dest_dir}" ]; then
+    find "${dest_dir}" -mindepth 1 -delete
+fi
 DESTDIR="$(pwd)/${dest_dir}" meson install --skip-subprojects -C "${build_dir}"
 
 data_dir="$(pwd)/${dest_dir}/data"
@@ -58,7 +60,7 @@ $file_packager "${dest_dir}/lite-xl-files.json" \
     --no-force --no-node --use-preload-cache --use-preload-plugins \
     --quiet --js-output="${dest_dir}/lite-xl-files.js"
 # this file is rather big, run closure compiler over the output
-node shell/closure.js "${dest_dir}/lite-xl-files.min.js" "${dest_dir}/lite-xl-files.js"
+node shell/esbuild-concat.js "${dest_dir}/lite-xl-files.min.js" "lite-xl-files.js" "true" "${dest_dir}/lite-xl-files.js"
 # these files can be removed for final distribution
 rm -rf "$(pwd)/${dest_dir}/lite-xl.js" "$(pwd)/${dest_dir}/lite-xl-files.js" \
         "${data_dir}" "$(pwd)/${dest_dir}/doc"

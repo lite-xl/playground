@@ -32,12 +32,12 @@ cpp_link_args = []
 
 
 [project options]
-buildtype = 'release'
+buildtype = 'debugoptimized'
 portable = true
 arch_tuple = 'wasm32-unknown'
 wrap_mode = 'forcefallback'
 
-	
+
 [host_machine]
 system = 'emscripten'
 cpu_family = 'wasm32'

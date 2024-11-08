@@ -21,6 +21,7 @@ lite-xl*
 LiteXL*
 
 shell/node_modules
+github-pages/
 github-pages.tar
 
 !resources/windows/*.diff

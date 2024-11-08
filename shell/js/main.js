@@ -1,11 +1,3 @@
-/**
- * @file Sets up the environment for running Lite XL.
- * @author takase1121
- */
-
-import { mkdirp, uploadFiles, downloadFiles } from "./fs.js";
-
-Module["thisProgram"] = "/usr/bin/lite-xl";
 
 /**
  * Shows one of the overlays.
@@ -29,43 +21,26 @@ function hideOverlay() {
   document.getElementById("canvas").style.display = "block";
 }
 
-let storageReady, runtimeReady, started;
-/**
- * Starts Lite XL.
- */
-function start() {
-  if (runtimeReady && storageReady && !started) {
-    started = true;
-    console.log("Starting Lite XL...");
-    FS.chdir("/home/web_user");
-
-    // disable canvas context menu
-    Module["canvas"].oncontextmenu = (e) => e.preventDefault();
-    hideOverlay();
-    callMain(Module["arguments"]);
-  }
-}
-
-// export functions accessed by C
-Module["uploadFiles"] = uploadFiles;
-Module["downloadFiles"] = downloadFiles;
-
-Module["preRun"].push(() => {
-  ENV["LITE_SCALE"] = window.devicePixelRatio.toString();
-  // ENV["LITE_XL_RUNTIME"] = "core.wasm_core";
-
-  // mount IDBFS in home folder
-  mkdirp("/home/web_user");
+Module["preRun"].push(function () {
+  Module["addRunDependency"]();
+  ["/home", "/home/web_user"].forEach(p => {
+      try { FS.mkdir(p); } catch (err) { }
+  });
   FS.mount(IDBFS, { autoPersist: true }, "/home/web_user");
-  FS.syncfs(true, (e) => {
-    if (e) {
-      console.error("syncfs(true) failed: ", e);
-    } else {
-      storageReady = true;
-      start();
-    }
+  FS.syncfs(true, function (err) {
+      Module["removeRunDependency"]();
+      if (err) {
+          console.error("cannot sync IDBFS():", err);
+      }
   });
 });
+
+Module["preRun"].push(() => {
+  started = true;
+  hideOverlay();
+  Module["canvas"].oncontextmenu = (e) => e.preventDefault();
+});
+
 Module["onExit"] = (status) => {
   if (status === 0) {
     showOverlay("exit");
@@ -74,10 +49,6 @@ Module["onExit"] = (status) => {
       `Program exited with status ${status}`;
     showOverlay("exit_error");
   }
-};
-Module["onRuntimeInitialized"] = () => {
-  runtimeReady = true;
-  start();
 };
 
 /**
