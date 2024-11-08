@@ -1,4 +1,4 @@
-FROM emscripten/emsdk:latest AS build
+FROM emscripten/emsdk:3.1.70 AS build
 
 USER emscripten
 
