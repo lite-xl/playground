@@ -4,5 +4,8 @@ subdir('js')
 subdir('css')
 subdir('html')
 
-install_data('favicon.png',
-                install_dir: lite_bindir)
+install_data(
+    'favicon.png',
+    install_dir: lite_bindir,
+    install_tag: 'shell'
+)
