@@ -14,7 +14,7 @@ lite_sources = [
 ]
 
 if host_machine.system() == 'emscripten'
-    lite_sources += 'api/wasm.cpp'
+    lite_sources += 'api/wasm.c'
 endif
 
 lite_sources += 'api/dirmonitor.c'
@@ -78,7 +78,6 @@ lite_exe = executable('lite-xl',
     include_directories: lite_includes,
     dependencies: lite_deps,
     c_args: lite_cargs,
-    cpp_args: ['-fexceptions'],
     objc_args: lite_cargs,
     link_args: lite_link_args,
     install_dir: lite_bindir,

@@ -152,9 +152,10 @@ for d in "${include_dirs[@]}"; do
   src_dir="${d%%@*}"
   dst_dir="${d##*@}"
   if [[ -d "${src_dir}" ]]; then
-    rsync -avh "${src_dir}/" "${data_dir}/${dst_dir}" "${exclude_args[@]}"
+    rsync -ah "${src_dir}/" "${data_dir}/${dst_dir}" "${exclude_args[@]}"
   else
     # fixme: bypasses exclude_dirs
+    mkdir -p "${data_dir}/$(dirname "$dst_dir")"
     cp -a "${src_dir}" "${data_dir}/${dst_dir}"
   fi
 done

@@ -1,4 +1,7 @@
-Module["addRunDependency"]();
+import Module from "asset-loader";
+import LiteXLFactory from "lite-xl";
+
+import { Interop } from "./interop";
 
 /**
  * Shows one of the overlays.
@@ -22,31 +25,60 @@ function hideOverlay() {
   document.getElementById("canvas").style.display = "block";
 }
 
-Module["preRun"].push(function () {
-  Module["addRunDependency"]("mountHome");
-  ENV["LITE_SCALE"] = window.devicePixelRatio.toString();
+/**
+ * Handles uncaught error.
+ * @param {object} module
+ * @param {Error} e
+ */
+function handleError(module, e) {
+  if (started) {
+    document.getElementById("exit_status").textContent = e.message;
+    showOverlay("exit_error");
+  } else {
+    module.setStatus(e.message || e.reason);
+    showOverlay("loading");
+  }
+  console.error(e.error || e.reason);
+}
 
-  ["/home", "/home/web_user"].forEach(p => {
-    try { FS.mkdir(p); } catch (err) { }
-  });
-  FS.mount(IDBFS, { autoPersist: true }, "/home/web_user");
-  FS.syncfs(true, function (err) {
-    if (err) {
-      console.error("cannot sync IDBFS():", err);
-    } else {
-      FS.chdir("/home/web_user");
-    }
-    Module["removeRunDependency"]("mountHome");
-  });
-});
+let started = false;
 
-Module["preRun"].push(() => {
+Module.preRun = Module.preRun ?? [];
+
+// add preRun functions to mount fs
+Module.preRun.push(
+  (module) => {
+    const { addRunDependency, removeRunDependency, FS, IDBFS, ENV } = module;
+    ENV["LITE_SCALE"] = window.devicePixelRatio.toString();
+
+    // mount and sync IDBFS
+    addRunDependency("mountHome");
+    ["/home", "/home/web_user"].forEach((p) => {
+      try {
+        FS.mkdir(p);
+      } catch (err) {}
+    });
+    FS.mount(IDBFS, { autoPersist: true }, "/home/web_user");
+    FS.syncfs(true, function (err) {
+      if (err) {
+        console.error("cannot sync IDBFS():", err);
+      } else {
+        FS.chdir("/home/web_user");
+      }
+      removeRunDependency("mountHome");
+    });
+  },
+  (module) => (module.interop = new Interop(module.FS)),
+);
+
+Module.onRuntimeInitialized = () => {
   started = true;
   hideOverlay();
-  Module["canvas"].oncontextmenu = (e) => e.preventDefault();
-});
+  document.getElementById("canvas").oncontextmenu = (e) => e.preventDefault();
+};
 
-Module["onExit"] = (status) => {
+// attach something to handle Lite XL quitting
+Module.onExit = (status) => {
   if (status === 0) {
     showOverlay("exit");
   } else {
@@ -78,15 +110,12 @@ function addInput(e) {
 // attach canvas to module
 window.addEventListener("load", () => {
   showOverlay("loading");
-
-  const status = document.getElementById("status");
   Module["canvas"] = document.getElementById("canvas");
-  Module["setStatus"] = (s) => {
-    status.textContent = s === "" ? "Initializing..." : s;
-  };
 
   // hook up our text input
   const textInput = document.getElementById("textinput");
+  const status = document.getElementById("status");
+  module.setStatus = (s) => (status.textContent = s ?? "Initializing...");
 
   // ignore composition text, only get end result
   textInput.addEventListener("compositionend", addInput);
@@ -102,19 +131,10 @@ window.addEventListener("load", () => {
     } else if (!e.isComposing) addInput(e);
   });
 
-  Module["removeRunDependency"]();
+  window.addEventListener("error", handleError);
+  window.addEventListener("unhandledrejection", handleError);
+
+  LiteXLFactory(Module)
+    .then(() => console.log("Lite XL initialized. Good luck!"))
+    .catch((err) => console.error("Error initializing Lite XL", err));
 });
-
-function handleError(e) {
-  if (started) {
-    document.getElementById("exit_status").textContent = e.message;
-    showOverlay("exit_error");
-  } else {
-    Module["setStatus"](e.message || e.reason);
-    showOverlay("loading");
-  }
-  console.error(e.error || e.reason);
-}
-
-window.addEventListener("error", handleError);
-window.addEventListener("unhandledrejection", handleError);

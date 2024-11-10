@@ -1,12 +1,18 @@
 custom_target(
     'main.js',
     input: [file_bundle[0], lite_exe, 'main.js'],
-    output: 'main.js',
+    output: ['main.js', 'main.js.map'],
     depends: [esbuild_dep],
     depend_files: [package_lock],
     install: true,
     install_dir: lite_bindir,
-    command: [node_exe, meson.current_source_dir() / 'amalgamate.js', '@OUTPUT@', '@INPUT@']
+    command: [
+        amalgamate_exe,
+        '@OUTPUT0@',
+        '@INPUT0@',
+        '@INPUT2@',
+        '@INPUT3@',
+    ],
 )
 
 custom_target(
@@ -21,7 +27,8 @@ custom_target(
     # esbuild only needs the entrypoint to figure out what files to bundle
     command: [
         esbuild_exe,
-        '--bundle', '--minify',
-        '@INPUT0@', '--outfile=@OUTPUT@',
-    ]
+        '--bundle',
+        '--minify', '@INPUT0@',
+        '--outfile=@OUTPUT@',
+    ],
 )

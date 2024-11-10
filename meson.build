@@ -1,12 +1,9 @@
 project('lite-xl',
-    ['c', 'cpp'],
+    ['c'],
     version : '2.1.5',
     license : 'MIT',
     meson_version : '>= 0.63',
-    default_options : [
-        'c_std=gnu11',
-        'cpp_std=gnu++17'
-    ]
+    default_options : ['c_std=gnu11']
 )
 
 #===============================================================================
@@ -109,20 +106,19 @@ elif host_machine.system() == 'emscripten'
         '-s', 'ASYNCIFY=1',
         '-s', 'ASYNCIFY_REMOVE=@0@'.format(','.join(asyncify_ignores)),
         '-s', 'ENVIRONMENT=web,worker',
-        '-s', 'EXIT_RUNTIME=0',
+        '-s', 'EXIT_RUNTIME=1',
         '-s', 'EXPORTED_FUNCTIONS=["_main"]',
-        '-s', 'EXPORTED_RUNTIME_METHODS=["ccall"]',
         '-s', 'FILESYSTEM=1',
         '-s', 'FORCE_FILESYSTEM=1',
         '-s', 'IGNORE_MISSING_MAIN=0',
         '-s', 'INITIAL_MEMORY=104857600',
-        '-s', 'MODULARIZE=0',
+        '-s', 'MODULARIZE=1',
+        '-s', 'EXPORT_NAME=LiteXLModule',
         '-s', 'STACK_SIZE=1MB',
         '-s', 'SUPPORT_BIG_ENDIAN=1',
         '-s', 'WASM=1',
-        '-fexceptions',
         # workaround for SDL2
-        '-s', 'EXPORTED_RUNTIME_METHODS=ALLOC_NORMAL,allocate',
+        '-s', 'EXPORTED_RUNTIME_METHODS=ALLOC_NORMAL,allocate,FS,ENV,IDBFS',
         '-lidbfs.js',
         # fix errno codes being minimized
         '-sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE=$ERRNO_CODES',
