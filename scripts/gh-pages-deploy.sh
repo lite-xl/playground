@@ -9,7 +9,6 @@ fi
 source scripts/common.sh
 
 # find file packager to package the data dirs
-file_packager="file_packager"
 if ! command -v file_packager >/dev/null 2>&1; then
     if ! command -v emcc >/dev/null 2>&1; then
         if command -v emsdk >/dev/null 2>&1; then
@@ -22,7 +21,7 @@ if ! command -v file_packager >/dev/null 2>&1; then
     fi
     # find file_packager by using emcc
     emcc_abs_path="$(readlink -f "$(command -v emcc)")"
-    file_packager="$(readlink -f "$(dirname "${emcc_abs_path}")/tools/file_packager")"
+    export PATH="$(readlink -f "$(dirname "${emcc_abs_path}")/tools"):$PATH"
 fi
 
 build_dir=$(get_default_build_dir "emscripten" "wasm32")
@@ -44,4 +43,6 @@ meson compile -C "$build_dir"
 if [ -d "${dest_dir}" ]; then
     find "${dest_dir}" -mindepth 1 -delete
 fi
-DESTDIR="$(pwd)/${dest_dir}" meson install --no-rebuild --skip-subprojects -C "${build_dir}"
+DESTDIR="$(pwd)/${dest_dir}" meson install --no-rebuild --skip-subprojects --tags shell,bundle,exe -C "${build_dir}"
+
+rm -f "${dest_dir}/lite-xl.js"

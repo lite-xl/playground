@@ -82,5 +82,6 @@ lite_exe = executable('lite-xl',
     link_args: lite_link_args,
     install_dir: lite_bindir,
     install: true,
+    install_tag: 'exe',
     win_subsystem: 'windows',
 )

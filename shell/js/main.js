@@ -1,4 +1,4 @@
-import Module from "asset-loader";
+import AssetModuleFactory from "asset-loader";
 import LiteXLFactory from "lite-xl";
 
 import { Interop } from "./interop";
@@ -32,7 +32,8 @@ function hideOverlay() {
  */
 function handleError(module, e) {
   if (started) {
-    document.getElementById("exit_status").textContent = e.message;
+    document.getElementById("exit_status").textContent =
+      e?.message ?? "Unknown exit status";
     showOverlay("exit_error");
   } else {
     module.setStatus(e.message || e.reason);
@@ -42,6 +43,8 @@ function handleError(module, e) {
 }
 
 let started = false;
+
+const Module = AssetModuleFactory({});
 
 Module.preRun = Module.preRun ?? [];
 

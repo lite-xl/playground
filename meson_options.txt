@@ -5,5 +5,6 @@ option('renderer', type : 'boolean', value : false, description: 'Use SDL render
 option('dirmonitor_backend', type : 'combo', value : '', choices : ['', 'inotify', 'fsevents', 'kqueue', 'win32', 'dummy'], description: 'define what dirmonitor backend to use')
 option('arch_tuple', type : 'string', value : '', description: 'Specify a custom architecture tuple')
 option('use_system_lua', type : 'boolean', value : false, description: 'Prefer System Lua over a the meson wrap')
-option('wasm_preload_files', type : 'boolean', value : true, description: 'Preload files into the output.')
-option('wasm_build_bundle', type : 'boolean', value : false, description: 'Build the bundle with file_packager. Requires bash.')
+option('wasm_preload_files', type : 'boolean', value : true, description: 'Preload files into the output')
+option('wasm_build_bundle', type : 'boolean', value : false, description: 'Build the bundle with file_packager (requires Python)')
+option('wasm_install_plugins', type : 'array', value : ['meta_languages', 'meta_colors', 'settings', 'open_ext'], description: 'Plugins to install when bundling')

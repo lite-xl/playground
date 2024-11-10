@@ -275,13 +275,14 @@ elif get_option('bundle') and host_machine.system() == 'darwin'
         'CURRENT_YEAR',
         run_command('date', '+%Y', capture: true).stdout().strip()
     )
-    install_data('resources/icons/icon.icns', install_dir : 'Contents/Resources')
+    install_data('resources/icons/icon.icns', install_dir : 'Contents/Resources', install_tag: ['runtime'])
     configure_file(
         input : 'resources/macos/Info.plist.in',
         output : 'Info.plist',
         configuration : conf_data,
         install : true,
-        install_dir : 'Contents'
+        install_dir : 'Contents',
+        install_tag: ['runtime'],
     )
 else
     lite_bindir = 'bin'
@@ -289,13 +290,16 @@ else
     lite_datadir = 'share/lite-xl'
     if host_machine.system() == 'linux'
         install_data('resources/icons/lite-xl.svg',
-            install_dir : 'share/icons/hicolor/scalable/apps'
+            install_dir : 'share/icons/hicolor/scalable/apps',
+            install_tag: ['runtime'],
         )
         install_data('resources/linux/com.lite_xl.LiteXL.desktop',
-            install_dir : 'share/applications'
+            install_dir : 'share/applications',
+            install_tag: ['runtime'],
         )
         install_data('resources/linux/com.lite_xl.LiteXL.appdata.xml',
-            install_dir : 'share/metainfo'
+            install_dir : 'share/metainfo',
+            install_tag: ['runtime'],
         )
     endif
 endif
@@ -314,14 +318,14 @@ if host_machine.system() != 'emscripten'
     ]
 endif
 
-install_data('licenses/licenses.md', install_dir : lite_docdir)
+install_data('licenses/licenses.md', install_dir : lite_docdir, install_tag: 'docs')
 
 if host_machine.system() != 'emscripten'
-    install_subdir('docs/api' , install_dir : lite_datadir, strip_directory: true)
+    install_subdir('docs/api' , install_dir : lite_datadir, strip_directory: true, install_tag: 'runtime')
 endif
-install_subdir('data/core' , install_dir : lite_datadir, exclude_files : 'start.lua')
+install_subdir('data/core' , install_dir : lite_datadir, exclude_files : 'start.lua', install_tag: 'runtime')
 foreach data_module : ['fonts', 'plugins', 'colors']
-    install_subdir(join_paths('data', data_module), install_dir : lite_datadir, exclude_files: excluded_plugins)
+    install_subdir(join_paths('data', data_module), install_dir : lite_datadir, exclude_files: excluded_plugins, install_tag: 'runtime')
 endforeach
 
 configure_file(
@@ -329,43 +333,71 @@ configure_file(
     output : 'start.lua',
     configuration : conf_data,
     install_dir : join_paths(lite_datadir, 'core'),
+    install_tag: 'runtime'
 )
 
 file_bundle = []
 if not get_option('source-only')
-    # build bundles
+    subdir('scripts')
     if host_machine.system() == 'emscripten' and get_option('wasm_build_bundle')
-        bash_exe = find_program('bash', required: true)
-        bundle_args = [
-            '-p', meson.current_source_dir() / 'data',
-            '-i', meson.current_source_dir() / 'welcome.md@welcome.md',
-            '-i', 'start.lua@core/start.lua',
-            '-e', 'core/start.lua'
+        plugins_target = []
+        plugins_bundle_inc = []
+        if get_option('wasm_install_plugins').length() > 0
+            lpm_exe = find_program('lpm')
+            lpm_cache_dir = 'lpm_cache'
+            lpm_user_dir = 'lpm_user'
+            lpm_args = [
+                lpm_exe,
+                '--cachedir', lpm_cache_dir,
+                '--userdir', lpm_user_dir,
+                '--datadir', meson.current_source_dir() / 'data',
+                '--assume-yes',
+                'install',
+                get_option('wasm_install_plugins')
+            ]
+            
+            plugins_target = custom_target(
+                'plugins',
+                command: lpm_args,
+                input: ['meson.build'],
+                output: [lpm_user_dir],
+            )
+            plugins_bundle_inc = ['--include-path', lpm_user_dir]
+        endif
+
+        bundle_js_name = 'lite-xl-files.js'
+        bundle_dat_name = 'lite-xl-files.json'
+
+        bundler_args = [
+            wasm_bundler_exe,
+            '--bundle-js', '@OUTPUT0@',
+            '--bundle-dat', '@OUTPUT1@',
+            '--depfile', '@DEPFILE@',
+            '--metafile', '@DEPFILE@.meta',
+            '--start-lua', 'start.lua',
+            '--prefix', '/usr/share/lite-xl',
+            '--include-path', meson.current_source_dir() / 'data',
         ]
 
         foreach data_module : ['fonts', 'plugins', 'colors', 'core']
-            bundle_args += [
-                '-i', (meson.current_source_dir() / 'data' / data_module) + '@' + data_module
-            ]
-            foreach excluded_file: excluded_plugins
-                bundle_args += ['-e', meson.current_source_dir() / 'data' / data_module / excluded_file]
-            endforeach
+            bundler_args += meson.current_source_dir() / 'data' / data_module
         endforeach
+        bundler_args += plugins_bundle_inc
 
-        file_bundle += custom_target(
-            'wasm-bundle',
+        bundle_target = custom_target(
+            bundle_js_name,
+            command: bundler_args,
             input: ['meson.build'],
-            output: ['lite-xl-files.js', 'lite-xl-files.json'],
-            command: [bash_exe, meson.current_source_dir() / 'scripts/generate_wasm_bundle.sh', '-d', '@OUTPUT1@', '-j', '@OUTPUT0@'] + bundle_args,
-            build_by_default: true,
-            build_always_stale: true,
+            output: [bundle_js_name, bundle_dat_name],
+            depends: [plugins_target],
+            depfile: '@OUTPUT0@.dep',
             install: true,
-            install_dir: lite_bindir
+            install_dir: [false, lite_bindir],
+            install_tag: ['bundle']
         )
     endif
     subdir('src')
     if host_machine.system() == 'emscripten'
         subdir('shell')
     endif
-    subdir('scripts')
 endif
