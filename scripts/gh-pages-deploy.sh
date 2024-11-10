@@ -27,13 +27,6 @@ fi
 build_dir=$(get_default_build_dir "emscripten" "wasm32")
 dest_dir=github-pages
 
-# install node deps
-if ! [[ -d shell/node_modules ]]; then
-  pushd shell
-  npm ci
-  popd
-fi
-
 if [[ ! -d "$build_dir" ]]; then
     meson setup "$build_dir" --cross-file resources/cross/unknown-wasm32.txt -Dwasm_preload_files=false -Dwasm_build_bundle=true
 fi
