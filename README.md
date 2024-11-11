@@ -12,12 +12,14 @@ to set up everything is not available.
 
 In general, you will need the following tools:
 
-- Emscripten (optionally emsdk) 3.1.57 and newer. Older versions will not work.
+- Emscripten (optionally emsdk) 3.1.57 to 3.1.70. Older versions will not work.
 - file_packager (Installed with Emscripten if emsdk is used)
-- A HTTP Server (I use `http-server`, but Python's `http.server` will work with caveats.)
+- A HTTP Server (I use `darkhttpd`, but Python's `http.server` and npm `http-server` will work)
 - Git
 - Bash (MSYS2 might work but not tested)
-- npm
+- Python
+
+The specific dependencies may be mentioned in the Dockerfile.
 
 You can find specific documentation in each subfolder.
 
