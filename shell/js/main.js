@@ -31,15 +31,15 @@ function hideOverlay() {
  * @param {Error} e
  */
 function handleError(module, e) {
+  const text = e?.message || e?.reason || e?.toString() || "Unknown error";
   if (started) {
-    document.getElementById("exit_status").textContent =
-      e?.message ?? "Unknown exit status";
+    document.getElementById("exit_status").textContent = text;
     showOverlay("exit_error");
   } else {
-    module.setStatus(e.message || e.reason);
+    module.setStatus(text);
     showOverlay("loading");
   }
-  console.error(e.error || e.reason);
+  console.error(text);
 }
 
 let started = false;
@@ -61,6 +61,7 @@ Module.preRun.push(
         FS.mkdir(p);
       } catch (err) {}
     });
+    module.setStatus("Mounting home directory...");
     FS.mount(IDBFS, { autoPersist: true }, "/home/web_user");
     FS.syncfs(true, function (err) {
       if (err) {
@@ -118,7 +119,7 @@ window.addEventListener("load", () => {
   // hook up our text input
   const textInput = document.getElementById("textinput");
   const status = document.getElementById("status");
-  module.setStatus = (s) => (status.textContent = s ?? "Initializing...");
+  Module["setStatus"] = (s) => (status.textContent = s ?? "Initializing...");
 
   // ignore composition text, only get end result
   textInput.addEventListener("compositionend", addInput);
@@ -134,8 +135,8 @@ window.addEventListener("load", () => {
     } else if (!e.isComposing) addInput(e);
   });
 
-  window.addEventListener("error", handleError);
-  window.addEventListener("unhandledrejection", handleError);
+  window.addEventListener("error", handleError.bind(this, Module));
+  window.addEventListener("unhandledrejection", handleError.bind(this, Module));
 
   LiteXLFactory(Module)
     .then(() => console.log("Lite XL initialized. Good luck!"))

@@ -45,7 +45,7 @@ endif
 cc = meson.get_compiler('c')
 
 lite_includes = []
-lite_cargs = ['-DSDL_MAIN_HANDLED', '-DPCRE2_STATIC']
+lite_cargs = ['-DSDL_MAIN_HANDLED', '-DPCRE2_STATIC', '-O3']
 # On macos we need to use the SDL renderer to support retina displays
 if get_option('renderer') or host_machine.system() == 'darwin'
     lite_cargs += '-DLITE_USE_SDL_RENDERER'
@@ -107,7 +107,7 @@ elif host_machine.system() == 'emscripten'
         '-s', 'ASYNCIFY_REMOVE=@0@'.format(','.join(asyncify_ignores)),
         '-s', 'ENVIRONMENT=web,worker',
         '-s', 'EXIT_RUNTIME=1',
-        '-s', 'EXPORTED_FUNCTIONS=["_main"]',
+        '-s', 'EXPORTED_FUNCTIONS=_main',
         '-s', 'FILESYSTEM=1',
         '-s', 'FORCE_FILESYSTEM=1',
         '-s', 'IGNORE_MISSING_MAIN=0',
@@ -117,11 +117,9 @@ elif host_machine.system() == 'emscripten'
         '-s', 'STACK_SIZE=1MB',
         '-s', 'SUPPORT_BIG_ENDIAN=1',
         '-s', 'WASM=1',
-        # workaround for SDL2
-        '-s', 'EXPORTED_RUNTIME_METHODS=ALLOC_NORMAL,allocate,FS,ENV,IDBFS',
+        '-s', 'MALLOC=emmalloc',
+        '-s', 'EXPORTED_RUNTIME_METHODS=FS,ENV,IDBFS',
         '-lidbfs.js',
-        # fix errno codes being minimized
-        '-sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE=$ERRNO_CODES',
         '--minify', '0',
         '--pre-js', meson.current_source_dir() / 'src' / 'pre.js',
     ]
@@ -131,6 +129,10 @@ elif host_machine.system() == 'emscripten'
             meson.current_source_dir() / 'data@/usr/share/lite-xl/'
         ]
     endif
+    if get_option('wasm_dwarf')
+        lite_cargs += '-g'
+        lite_link_args += '-g'
+    endif
 endif
 #===============================================================================
 # Dependencies
@@ -138,7 +140,6 @@ endif
 if not get_option('source-only')
     libm = cc.find_library('m', required : false)
     libdl = cc.find_library('dl', required : false)
-    libembind = cc.find_library('embind', required : true)
 
     default_fallback_options = ['warning_level=0', 'werror=false']
 
@@ -252,7 +253,7 @@ if not get_option('source-only')
         assert(not sdlmain_dep.found(), 'checking if fake dependency has been found')
     endif
 
-    lite_deps = [lua_dep, sdl_dep, sdlmain_dep, freetype_dep, pcre2_dep, libm, libdl, libembind]
+    lite_deps = [lua_dep, sdl_dep, sdlmain_dep, freetype_dep, pcre2_dep, libm, libdl]
 endif
 #===============================================================================
 # Install Configuration

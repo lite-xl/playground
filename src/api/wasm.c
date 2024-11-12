@@ -1,20 +1,21 @@
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <lua.h>
 #include <lauxlib.h>
 
+#include <SDL.h>
 #include <emscripten.h>
 
-EM_ASYNC_JS(char *, file_upload, (char *dest, int dir), {
-  try {
-    const count = await Module.interop.uploadFiles(UTF8ToString(dest), !!dir);
-    return stringToNewUTF8("1" + count);
-  } catch (e) {
-    console.error(e);
-    return stringToNewUTF8("0" + e.toString());
+static int deserialize(lua_State *L, const char *str, size_t size) {
+  int top = lua_gettop(L);
+  if (luaL_loadbuffer(L, str, size, str) || lua_pcall(L, 0, LUA_MULTRET, 0)) {
+    if (lua_gettop(L) - top == 0) lua_pushliteral(L, "luaL_loadbuffer() failed");
+    return lua_error(L);
   }
-})
+  return lua_gettop(L) - top;
+}
 
 EM_ASYNC_JS(char *, file_download, (char *path), {
   try {
@@ -50,17 +51,57 @@ EM_ASYNC_JS(int, clipboard_get, (char* *result, char* *err), {
   }
 })
 
+static int raise_em_error(lua_State *L, const char *msg) {
+  lua_pushstring(L, msg);
+  free((void *) msg);
+  return lua_error(L);
+}
+
+static int f_get_promises(lua_State *L) {
+  const char *type = luaL_optstring(L, 1, NULL);
+  size_t size = 0;
+  char *serialized = NULL;
+  const char *err = EM_ASM_PTR({
+    try {
+      const promises = Module.interop.getPromisesSerialized($0 ? UTF8ToString($0) : undefined);
+      const buf = stringToNewUTF8(promises);
+      setValue($1, buf, '*');
+      setValue($2, promises.length, 'i32');
+      return 0;
+    } catch (err) {
+      console.trace(err);
+      return stringToNewUTF8(err.toString());
+    }
+  }, type, &serialized, &size);
+  if (err) return raise_em_error(L, err);
+
+  int nval = deserialize(L, serialized, size);
+  free(serialized);
+  if (nval != 1)
+    return luaL_error(L, "cannot deserialize promise, got %d values", nval);
+
+  return 1;
+}
+
 static int f_upload_files(lua_State *L) {
-  char *result = file_upload((char *) luaL_checkstring(L, 1), lua_toboolean(L, 2));
-  // the function returns 0 as the first character if an error occured
-  if (*result == '0') {
-    lua_pushnil(L);
-  } else {
-    lua_pushboolean(L, 1);
-  }
-  lua_pushstring(L, result + 1);
-  free(result);
-  return 2;
+  lua_settop(L, 5);
+  const char *path = luaL_checkstring(L, 1);
+  int is_dir = lua_toboolean(L, 2);
+
+  int promise_id = 0;
+  const char *err = (const char *) EM_ASM_PTR({
+    try {
+      const promise = Module.interop.uploadFiles(UTF8ToString($0), $1);
+      setValue($2, promise['id'], 'i32');
+    } catch (err) {
+      console.trace(err);
+      return stringToNewUTF8(err.toString());
+    }
+  }, path, is_dir, &promise_id);
+  if (err)
+    return raise_em_error(L, err);
+  lua_pushinteger(L, promise_id);
+  return 1;
 }
 
 static int f_download_files(lua_State *L) {
@@ -128,6 +169,7 @@ static luaL_Reg lib[] = {
   { "set_clipboard", f_set_clipboard },
   { "focus_text_input", f_focus_text_input },
   { "set_text_input_rect", f_set_text_input_rect },
+  { "get_promises", f_get_promises },
   { NULL, NULL },
 };
 

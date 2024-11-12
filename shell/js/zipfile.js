@@ -13,22 +13,23 @@ const ZIP_EOCD_SIZE = 22;
  * Simple ZIP file writer.
  */
 export class ZipFile {
+  #encoder = new TextEncoder();
+  #entries = [];
+  #output = [];
+  #offset = 0;
+  #CRC32_LOOKUP = [];
+
   /**
    * Creates a ZIP file writer.
    */
   constructor() {
-    this.encoder = new TextEncoder();
-    this.entries = [];
-    this.output = [];
-    this.offset = 0;
     // seed the crc lookup table
-    this.CRC32_LOOKUP = [];
     for (let i = 0; i <= 0xff; i++) {
       let crc = i;
       for (let j = 0; j < 8; j++) {
         crc = (crc >> 1) ^ (-(crc & 1) & ZIP_POLY);
       }
-      this.CRC32_LOOKUP[i] = crc;
+      this.#CRC32_LOOKUP[i] = crc;
     }
   }
 
@@ -41,7 +42,7 @@ export class ZipFile {
    */
   addFile(path, content, modTime) {
     modTime = modTime ?? new Date();
-    const encodedPath = this.encoder.encode(path);
+    const encodedPath = this.#encoder.encode(path);
     const [dosTime, dosDate] = this.dostime(modTime);
     const crc32 = content ? this.crc32(content, 0) : 0;
     const entry = {
@@ -49,7 +50,7 @@ export class ZipFile {
       dosTime,
       dosDate,
       crc32,
-      offset: this.offset,
+      offset: this.#offset,
       size: content ? content.byteLength : 0,
     };
     const header = new DataView(new ArrayBuffer(ZIP_LOCAL_HEADER_SIZE));
@@ -66,10 +67,10 @@ export class ZipFile {
     writeLE32(22, content ? content.byteLength : 0);
     writeLE16(26, encodedPath.byteLength);
     writeLE16(28, 0); // extra field length
-    this.output.push(header.buffer, encodedPath);
-    if (content) this.output.push(content);
-    this.entries.push(entry);
-    this.offset += ZIP_LOCAL_HEADER_SIZE + encodedPath.byteLength + entry.size;
+    this.#output.push(header.buffer, encodedPath);
+    if (content) this.#output.push(content);
+    this.#entries.push(entry);
+    this.#offset += ZIP_LOCAL_HEADER_SIZE + encodedPath.byteLength + entry.size;
   }
 
   /**
@@ -87,8 +88,8 @@ export class ZipFile {
    * @returns {ArrayBufferLike[]}
    */
   finalize() {
-    const oldOffset = this.offset;
-    for (const entry of this.entries) {
+    const oldOffset = this.#offset;
+    for (const entry of this.#entries) {
       const header = new DataView(new ArrayBuffer(ZIP_CENTRAL_HEADER_SIZE));
       const writeLE16 = (offset, data) => header.setUint16(offset, data, true);
       const writeLE32 = (offset, data) => header.setUint32(offset, data, true);
@@ -109,9 +110,9 @@ export class ZipFile {
       writeLE16(36, 0); // internal attr
       writeLE16(38, 0); // external attr
       writeLE32(42, entry.offset); // local header offset
-      this.output.push(header.buffer);
-      this.output.push(entry.encodedPath);
-      this.offset += header.byteLength + entry.encodedPath.byteLength;
+      this.#output.push(header.buffer);
+      this.#output.push(entry.encodedPath);
+      this.#offset += header.byteLength + entry.encodedPath.byteLength;
     }
     const eocd = new DataView(new ArrayBuffer(ZIP_EOCD_SIZE));
     const writeEOCDLE16 = (offset, data) => writeEOCDLE16(offset, data, true);
@@ -119,13 +120,13 @@ export class ZipFile {
     writeEOCDLE32(0, ZIP_EOCD_MAGIC);
     writeEOCDLE16(4, 0); // number of disk
     writeEOCDLE16(6, 0); // cd disk start
-    writeEOCDLE16(8, this.entries.length); // number of records (disk)
-    writeEOCDLE16(10, this.entries.length); // number of records (total)
-    writeEOCDLE32(12, this.offset - oldOffset); // cd size
+    writeEOCDLE16(8, this.#entries.length); // number of records (disk)
+    writeEOCDLE16(10, this.#entries.length); // number of records (total)
+    writeEOCDLE32(12, this.#offset - oldOffset); // cd size
     writeEOCDLE32(16, oldOffset); // cd offset
     writeEOCDLE16(20, 0); // comment length
-    this.output.push(eocd);
-    return this.output;
+    this.#output.push(eocd);
+    return this.#output;
   }
 
   /**
@@ -166,7 +167,7 @@ export class ZipFile {
   crc32(data, previous) {
     let crc = ~previous;
     for (let i = 0; i < data.byteLength; i++) {
-      crc = (crc >> 8) ^ this.CRC32_LOOKUP[(crc & 0xff) ^ data[i]];
+      crc = (crc >> 8) ^ this.#CRC32_LOOKUP[(crc & 0xff) ^ data[i]];
     }
     return ~crc;
   }

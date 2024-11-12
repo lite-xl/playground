@@ -3,6 +3,7 @@ custom_target(
     input: ['main.js', bundle_target[0], lite_exe, 'main.js'],
     output: ['main.js', 'main.js.map'],
     depends: [bundle_target],
+    depend_files: ['zipfile.js', 'interop.js'],
     install: true,
     install_dir: lite_bindir,
     install_tag: ['shell'],

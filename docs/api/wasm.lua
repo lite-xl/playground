@@ -5,14 +5,31 @@
 ---@class wasm
 wasm = {}
 
+
+---
+---A promise.
+---
+---@class wasm.promise
+---@field id number
+---@field type string|nil
+---@field done boolean
+---@field error string|nil
+
+
+---
+---Returns a list of promises that are pending or completed.
+---Completed promises will be removed after this call.
+---
+---@param type string? the promise type to filter for
+---
+---@return wasm.promise[]
+function wasm.get_promises(type) end
+
 ---
 ---Prompts the user to upload a file or directory.
 ---
 ---@param path string
 ---@param dir boolean? If true, the user will upload a directory.
----
----@return true|nil success
----@return string|nil error_msg
 function wasm.upload_files(path, dir) end
 
 ---

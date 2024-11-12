@@ -28,7 +28,10 @@ build_dir=$(get_default_build_dir "emscripten" "wasm32")
 dest_dir=github-pages
 
 if [[ ! -d "$build_dir" ]]; then
-    meson setup "$build_dir" --cross-file resources/cross/unknown-wasm32.txt -Dwasm_preload_files=false -Dwasm_build_bundle=true
+    if [[ -n "$CI" ]]; then
+        DISABLE_DWARF="-Dwasm_dwarf=false"
+    fi
+    meson setup "$build_dir" --cross-file resources/cross/unknown-wasm32.txt -Dwasm_preload_files=false -Dwasm_build_bundle=true $DISABLE_DWARF
 fi
 
 meson compile -C "$build_dir"
