@@ -23,6 +23,25 @@ The specific dependencies may be mentioned in the Dockerfile.
 
 You can find specific documentation in each subfolder.
 
+## Debug Info
+
+By default, running `bash scripts/gh-pages-deploy.sh` will generate DWARF debug info
+if the `CI` environment variable is not set.
+To use the debug info, you must install the [C/C++ DevTools Support (DWARF)](https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb)
+extension from the Chrome Web Store.
+
+After installation, you must configure path substitution to allow your browser to find your source directory correctly.
+To do this, right click on the extension icon → Options.
+Click on "Add module settings", and enter `lite-xl.wasm` as the module name.
+Click on "Add path substitution" and enter `/build-wasm32-emscripten` on the left
+and your source folder (e.g. `/home/user/lite-xl-playground`) on the right.
+
+After doing this, the debug information should be usable, including stack traces, source maps and single-stepping.
+You may need to restart your browser (sometimes several times) for it to work properly.
+
+You may also need to remove your previous build directory (`build-wasm32-emscripten`)
+to allow meson to reconfigure properly.
+
 <details>
 <summary>Original README</summary>
 
