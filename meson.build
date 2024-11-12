@@ -74,7 +74,7 @@ elif host_machine.system() == 'emscripten'
         '-s', 'FILESYSTEM=1',
         '-s', 'FORCE_FILESYSTEM=1',
         '-s', 'IGNORE_MISSING_MAIN=0',
-        '-s', 'INITIAL_MEMORY=104857600',
+        '-s', 'INITIAL_HEAP=85983232',
         '-s', 'MODULARIZE=1',
         '-s', 'EXPORT_NAME=LiteXLModule',
         '-s', 'STACK_SIZE=1MB',
