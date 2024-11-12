@@ -13,6 +13,8 @@ ADD https://github.com/lite-xl/lite-xl-plugin-manager/releases/download/v${LPM_V
 
 FROM emscripten/emsdk:3.1.70 AS build
 
+ARG PRODUCTION=true
+
 RUN --mount=from=src,target=/src <<EOF
 mkdir -p /esbuild
 tar -oxzf /src/esbuild.tgz -C /esbuild
@@ -30,7 +32,7 @@ WORKDIR /build
 
 COPY --chown=emscripten . .
 
-RUN bash scripts/gh-pages-deploy.sh
+RUN PRODUCTION=${PRODUCTION} bash scripts/gh-pages-deploy.sh
 
 FROM p3terx/darkhttpd:latest
 

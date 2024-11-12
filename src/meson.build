@@ -81,7 +81,32 @@ lite_exe = executable('lite-xl',
     objc_args: lite_cargs,
     link_args: lite_link_args,
     install_dir: lite_bindir,
-    install: true,
+    install: get_option('wasm_debug') == 'none' or get_option('wasm_debug') == 'dwarf',
     install_tag: 'exe',
     win_subsystem: 'windows',
 )
+
+if get_option('wasm_debug') == 'sourcemap'
+    emstrip_exe = find_program('emstrip')
+    custom_target(
+        'lite-xl-stripped',
+        command: [emstrip_exe, '--strip-all', '@OUTPUT0@'],
+        input: 'meson.build',
+        output: 'lite-xl.wasm',
+        depends: [lite_exe],
+        install: true,
+        install_tag: 'exe',
+        install_dir: lite_bindir,
+    )
+
+    custom_target(
+        'lite-xl.wasm.map',
+        command: [emstrip_exe, '--version'],
+        input: 'meson.build',
+        output: 'lite-xl.wasm.map',
+        depends: [lite_exe],
+        install: true,
+        install_tag: 'sourcemap',
+        install_dir: lite_bindir,
+    )
+endif

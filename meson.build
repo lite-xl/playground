@@ -92,9 +92,13 @@ elif host_machine.system() == 'emscripten'
             meson.current_source_dir() / 'data@/usr/share/lite-xl/'
         ]
     endif
-    if get_option('wasm_dwarf')
+    if get_option('wasm_debug') != 'none'
+        # generates DWARF debug info
         lite_cargs += '-g'
         lite_link_args += '-g'
+        if get_option('wasm_debug') == 'sourcemap'
+            lite_link_args += ['-gsource-map']
+        endif
     endif
     if get_option('wasm_asyncify_advise')
         lite_link_args += ['-s', 'ASYNCIFY_ADVISE=1']
@@ -302,6 +306,29 @@ configure_file(
     install_dir : join_paths(lite_datadir, 'core'),
     install_tag: 'runtime'
 )
+
+if get_option('wasm_debug') == 'sourcemap'
+    install_subdir(
+        'src',
+        exclude_files: ['meson.build', 'bundle_open.m'],
+        install_tag: 'sourcemap',
+        install_dir: lite_bindir,
+    )
+    subproject_excludes = [
+        'freetype2.wrap',
+        'lua.wrap',
+        'pcre2.wrap',
+        'sdl2.wrap',
+        'packagefiles',
+        'packagecache',
+    ]
+    install_subdir(
+        'subprojects',
+        exclude_files: subproject_excludes,
+        install_tag: 'sourcemap',
+        install_dir: lite_bindir,
+    )
+endif
 
 file_bundle = []
 if not get_option('source-only')
