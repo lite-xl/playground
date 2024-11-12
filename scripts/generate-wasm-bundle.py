@@ -17,25 +17,29 @@ def get_deps(input_path, hasher):
     dir_stat = Path(input_path).stat(follow_symlinks=False)
     if stat.S_ISREG(dir_stat.st_mode):
         hasher.update(input_path.encode())
-        hasher.update(dir_stat.st_mtime_ns)
-        return input_path
-
-    stack = [input_path]
-    while len(stack) > 0:
-        for p in os.scandir(stack.pop()):
-            stat_res = p.stat(follow_symlinks=False)
-            isdir = stat.S_ISDIR(stat_res.st_mode)
-            path = f"{p.path}{os.path.sep}" if isdir else p.path
-            hasher.update(path.encode())
-            hasher.update(
-                stat_res.st_mtime_ns.to_bytes(
-                    (stat_res.st_mtime_ns.bit_length() + 7) // 8, byteorder="big"
-                )
+        hasher.update(
+            dir_stat.st_mtime_ns.to_bytes(
+                (dir_stat.st_mtime_ns.bit_length() + 7) // 8, byteorder="big"
             )
-            if isdir:
-                stack.append(p.path)
-            else:
-                yield path
+        )
+        yield input_path
+    else:
+        stack = [input_path]
+        while len(stack) > 0:
+            for p in os.scandir(stack.pop()):
+                stat_res = p.stat(follow_symlinks=False)
+                isdir = stat.S_ISDIR(stat_res.st_mode)
+                path = f"{p.path}{os.path.sep}" if isdir else p.path
+                hasher.update(path.encode())
+                hasher.update(
+                    stat_res.st_mtime_ns.to_bytes(
+                        (stat_res.st_mtime_ns.bit_length() + 7) // 8, byteorder="big"
+                    )
+                )
+                if isdir:
+                    stack.append(p.path)
+                else:
+                    yield path
 
 
 def escape_makefile(s):

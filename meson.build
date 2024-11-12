@@ -343,6 +343,7 @@ if not get_option('source-only')
             '--metafile', '@DEPFILE@.meta',
             '--start-lua', 'start.lua',
             '--prefix', '/usr/share/lite-xl',
+            '--include-path', meson.current_source_dir(), meson.current_source_dir() / 'welcome.md',
             '--include-path', meson.current_source_dir() / 'data',
         ]
 
