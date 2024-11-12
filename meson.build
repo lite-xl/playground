@@ -64,47 +64,10 @@ lite_link_args = []
 if host_machine.system() == 'darwin'
     lite_link_args += ['-framework', 'CoreServices', '-framework', 'Foundation']
 elif host_machine.system() == 'emscripten'
-    # ignore these functions when instrumenting asyncify
-    asyncify_ignores = [
-        'SDL_BlitScaled',
-        'SDL_UpperBlitScaled',
-        'SDL_MapRGB*',
-        'SDL_FillRect',
-        'SDL_FreeSurface',
-        'SDL_CreateRGBSurface',
-        'SDL_GetWindowSurface',
-        'SDL_PollEvent',
-        'SDL_CreateSystemCursor',
-        'SDL_SetWindowTitle',
-        'SDL_SetCursor',
-        'SDL_GetWindowSize',
-        'SDL_GetWindowPosition',
-        'lua_push*',
-        'lua_rawget*',
-        'luaL_check*',
-        'pcre2*',
-        'FT_*',
-        'Bezier_*',
-        'g_*',
-        'FT_*',
-        'ft_*',
-        'TT_*',
-        'tt_*',
-        '__*',
-        '*printf',
-        'gray_*',
-        'fopen',
-        'fclose',
-        'fread',
-        'fflush',
-        'qsort',
-        'sift'
-    ]
     lite_link_args += [
         '-O3',
         '-s', 'ALLOW_MEMORY_GROWTH=1',
         '-s', 'ASYNCIFY=1',
-        '-s', 'ASYNCIFY_REMOVE=@0@'.format(','.join(asyncify_ignores)),
         '-s', 'ENVIRONMENT=web,worker',
         '-s', 'EXIT_RUNTIME=1',
         '-s', 'EXPORTED_FUNCTIONS=_main',
@@ -132,6 +95,9 @@ elif host_machine.system() == 'emscripten'
     if get_option('wasm_dwarf')
         lite_cargs += '-g'
         lite_link_args += '-g'
+    endif
+    if get_option('wasm_asyncify_advise')
+        lite_link_args += ['-s', 'ASYNCIFY_ADVISE=1']
     endif
 endif
 #===============================================================================

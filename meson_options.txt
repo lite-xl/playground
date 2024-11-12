@@ -8,4 +8,5 @@ option('use_system_lua', type : 'boolean', value : false, description: 'Prefer S
 option('wasm_preload_files', type : 'boolean', value : true, description: 'Preload files into the output')
 option('wasm_build_bundle', type : 'boolean', value : false, description: 'Build the bundle with file_packager (requires Python)')
 option('wasm_install_plugins', type : 'array', value : ['meta_languages', 'meta_colors', 'settings', 'open_ext'], description: 'Plugins to install when bundling')
-option('wasm_dwarf', type : 'boolean', value: true, description: 'Generates DWARF debug info for WASM builds')
+option('wasm_dwarf', type : 'boolean', value : true, description: 'Generates DWARF debug info for WASM builds')
+option('wasm_asyncify_advise', type : 'boolean', value : false, description: 'Check which functions has been instrumented by Asyncify and why')
