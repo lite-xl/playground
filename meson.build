@@ -382,8 +382,8 @@ if not get_option('source-only')
             '--metafile', '@OUTPUT0@',
             bundler_common_args
         ]
-        bundle_secondary = custom_target(
-            bundle_js_name + '.dep',
+        bundle_metafile = custom_target(
+            bundle_js_name + '.meta',
             command: bundle_secondary_args,
             input: ['meson.build'],
             output: [bundle_js_name + '.meta'],
@@ -405,7 +405,7 @@ if not get_option('source-only')
             command: bundle_args,
             input: ['meson.build'],
             output: [bundle_js_name, bundle_dat_name],
-            depends: [bundle_secondary, plugins_target],
+            depends: [bundle_metafile, plugins_target],
             install: true,
             install_dir: [false, lite_bindir],
             install_tag: ['bundle']
