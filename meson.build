@@ -365,12 +365,7 @@ if not get_option('source-only')
         bundle_js_name = 'lite-xl-files.js'
         bundle_dat_name = 'lite-xl-files.json'
 
-        bundler_args = [
-            wasm_bundler_exe,
-            '--bundle-js', '@OUTPUT0@',
-            '--bundle-dat', '@OUTPUT1@',
-            '--depfile', '@DEPFILE@',
-            '--metafile', '@DEPFILE@.meta',
+        bundler_common_args = [
             '--start-lua', 'start.lua',
             '--prefix', '/usr/share/lite-xl',
             '--include-path', meson.current_source_dir(), meson.current_source_dir() / 'welcome.md',
@@ -378,17 +373,39 @@ if not get_option('source-only')
         ]
 
         foreach data_module : ['fonts', 'plugins', 'colors', 'core']
-            bundler_args += meson.current_source_dir() / 'data' / data_module
+            bundler_common_args += meson.current_source_dir() / 'data' / data_module
         endforeach
-        bundler_args += plugins_bundle_inc
+        bundler_common_args += plugins_bundle_inc
+
+        bundle_secondary_args = [
+            wasm_bundler_exe,
+            '--metafile', '@OUTPUT0@',
+            bundler_common_args
+        ]
+        bundle_secondary = custom_target(
+            bundle_js_name + '.dep',
+            command: bundle_secondary_args,
+            input: ['meson.build'],
+            output: [bundle_js_name + '.meta'],
+            depends: [plugins_target],
+            build_always_stale: true
+        )
+
+        bundle_args = [
+            wasm_bundler_exe,
+            '--bundle',
+            '--bundle-js', '@OUTPUT0@',
+            '--bundle-dat', '@OUTPUT1@',
+            '--metafile', '@OUTPUT0@.meta',
+            bundler_common_args,
+        ]
 
         bundle_target = custom_target(
             bundle_js_name,
-            command: bundler_args,
+            command: bundle_args,
             input: ['meson.build'],
             output: [bundle_js_name, bundle_dat_name],
-            depends: [plugins_target],
-            depfile: '@OUTPUT0@.dep',
+            depends: [bundle_secondary, plugins_target],
             install: true,
             install_dir: [false, lite_bindir],
             install_tag: ['bundle']

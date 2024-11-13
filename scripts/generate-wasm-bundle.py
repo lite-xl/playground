@@ -1,6 +1,7 @@
 # /usr/bin/env python3
 
 import os
+import sys
 import stat
 import shutil
 import hashlib
@@ -13,46 +14,30 @@ def get_deps(input_path, hasher):
     """
     Walks a directory and gets the mtime of each file and directory.
     """
+
+    def to_bytes(num):
+        return num.to_bytes((num.bit_length() + 7) // 8, byteorder="big")
+
+    def update_hash(path, stat_res):
+        hasher.update(path.encode())
+        hasher.update(to_bytes(stat_res.st_mode))
+        hasher.update(to_bytes(stat_res.st_mtime_ns))
+
     # just return the path and hash if the path is actually a file
     dir_stat = Path(input_path).stat(follow_symlinks=False)
     if stat.S_ISREG(dir_stat.st_mode):
-        hasher.update(input_path.encode())
-        hasher.update(
-            dir_stat.st_mtime_ns.to_bytes(
-                (dir_stat.st_mtime_ns.bit_length() + 7) // 8, byteorder="big"
-            )
-        )
+        update_hash(input_path, dir_stat)
         yield input_path
     else:
         stack = [input_path]
         while len(stack) > 0:
             for p in os.scandir(stack.pop()):
                 stat_res = p.stat(follow_symlinks=False)
-                isdir = stat.S_ISDIR(stat_res.st_mode)
-                path = f"{p.path}{os.path.sep}" if isdir else p.path
-                hasher.update(path.encode())
-                hasher.update(
-                    stat_res.st_mtime_ns.to_bytes(
-                        (stat_res.st_mtime_ns.bit_length() + 7) // 8, byteorder="big"
-                    )
-                )
-                if isdir:
+                update_hash(p.path, stat_res)
+                if stat.S_ISDIR(stat_res.st_mode):
                     stack.append(p.path)
-                else:
-                    yield path
-
-
-def escape_makefile(s):
-    """
-    Escapes the string according to cmake.
-    https://cmake.org/cmake/help/latest/command/add_custom_command.html#grammar-token-depfile-pathname
-    """
-    return (
-        s.replace("$", "$$")
-        .replace("#", "\\#")
-        .replace(" ", "\\ ")
-        .replace("\t", "\\\t")
-    )
+                elif stat.S_ISREG(stat_res.st_mode):
+                    yield p.path
 
 
 def copy_file(dest, src, src_prefix):
@@ -77,13 +62,14 @@ class PrefixedInputAction(Action):
 def main():
     parser = ArgumentParser()
     parser.add_argument(
-        "--bundle-dat", required=True, help="The name of the bundle data file"
+        "--bundle-dat",
+        required=("--bundle" in sys.argv),
+        help="The name of the bundle data file",
     )
     parser.add_argument(
-        "--bundle-js", required=True, help="The name of the bundle JS file"
-    )
-    parser.add_argument(
-        "--depfile", required=True, help="Path for the generated depfile"
+        "--bundle-js",
+        required=("--bundle" in sys.argv),
+        help="The name of the bundle JS file",
     )
     parser.add_argument(
         "--metafile",
@@ -94,6 +80,11 @@ def main():
     parser.add_argument("--start-lua", required=True, help="Path to start.lua")
     parser.add_argument(
         "--prefix", required=True, help="Prefix of the files added to bundle"
+    )
+    parser.add_argument(
+        "--bundle",
+        action="store_true",
+        help="Run file_packager to generate the bundle.",
     )
     parser.add_argument(
         "--include-path",
@@ -119,65 +110,60 @@ def main():
         for dir in dirs:
             s.update(get_deps(dir, hasher))
         input_files[prefix] = s
+    digest = hasher.hexdigest()
 
-    digest = hasher.digest()
-
-    bundle_dat = args.bundle_dat
-    bundle_js = args.bundle_js
-    # copy the file to make the directory structure
-    packager_args = [
-        "file_packager",
-        bundle_dat,
-        "--no-force",
-        "--no-node",
-        "--use-preload-cache",
-        "--use-preload-plugins",
-    ]
-
-    # copy files to destination
-    for prefix, files in input_files.items():
-        prefix = Path(prefix)
-        for path in files:
-            path = Path(path)
-            # skip this file, we will add it later
-            if path.match("data/core/start.lua"):
-                continue
-            dest_path = copy_file(dest_dir, path, prefix)
-            packager_args.extend(
-                ["--preload", f"{str(path)}@/{str(dest_path.relative_to(work_dir))}"]
-            )
-
-    # add start.lua
-    packager_args.extend(
-        [
-            "--preload",
-            f"{args.start_lua}@/{str(dest_dir.relative_to(work_dir) / 'core/start.lua')}",
-        ]
-    )
-
-    # run file_packager and capture the js output, and then wrap it
-    proc = subprocess.run(packager_args, capture_output=True, text=True)
-    with open(bundle_js, "w") as js_file:
-        js_file.write("module.exports = (Module) => {")
-        js_file.write(proc.stdout)
-        js_file.write("; return Module; };")
-
-    # check if the depfile is updated
+    local_digest = None
     try:
         with open(args.metafile, "r") as metafile:
-            sha = metafile.readline().strip()
-            if sha != digest:
-                raise ValueError("digest mismatch")
+            local_digest = metafile.readline().strip()
     except:
-        # write the new depfile
-        with open(args.depfile, "w") as depfile:
-            depfile.write(
-                f"{escape_makefile(args.bundle_js)} {escape_makefile(args.bundle_dat)}:\n"
-            )
-            for p in input_files:
-                depfile.write(escape_makefile(p))
-                depfile.write(" \\\n")
+        local_digest = None
 
+    if args.bundle:
+        bundle_dat = args.bundle_dat
+        bundle_js = args.bundle_js
+        # copy the file to make the directory structure
+        packager_args = [
+            "file_packager",
+            bundle_dat,
+            "--no-force",
+            "--no-node",
+            "--use-preload-cache",
+            "--use-preload-plugins",
+        ]
+
+        # copy files to destination
+        for prefix, files in input_files.items():
+            prefix = Path(prefix)
+            for path in files:
+                path = Path(path)
+                # skip this file, we will add it later
+                if path.match("data/core/start.lua"):
+                    continue
+                dest_path = copy_file(dest_dir, path, prefix)
+                packager_args.extend(
+                    [
+                        "--preload",
+                        f"{str(path)}@/{str(dest_path.relative_to(work_dir))}",
+                    ]
+                )
+
+        # add start.lua
+        packager_args.extend(
+            [
+                "--preload",
+                f"{args.start_lua}@/{str(dest_dir.relative_to(work_dir) / 'core/start.lua')}",
+            ]
+        )
+
+        # run file_packager and capture the js output, and then wrap it
+        proc = subprocess.run(packager_args, capture_output=True, text=True)
+        with open(bundle_js, "w") as js_file:
+            js_file.write("module.exports = (Module) => {")
+            js_file.write(proc.stdout)
+            js_file.write("; return Module; };")
+
+    if digest != local_digest:
         # update metafile
         with open(args.metafile, "w") as metafile:
             metafile.write(f"{digest}")
