@@ -115,8 +115,8 @@ export class ZipFile {
       this.#offset += header.byteLength + entry.encodedPath.byteLength;
     }
     const eocd = new DataView(new ArrayBuffer(ZIP_EOCD_SIZE));
-    const writeEOCDLE16 = (offset, data) => writeEOCDLE16(offset, data, true);
-    const writeEOCDLE32 = (offset, data) => writeEOCDLE32(offset, data, true);
+    const writeEOCDLE16 = (offset, data) => eocd.setUint16(offset, data, true);
+    const writeEOCDLE32 = (offset, data) => eocd.setUint32(offset, data, true);
     writeEOCDLE32(0, ZIP_EOCD_MAGIC);
     writeEOCDLE16(4, 0); // number of disk
     writeEOCDLE16(6, 0); // cd disk start

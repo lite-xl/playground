@@ -17,16 +17,6 @@ static int deserialize(lua_State *L, const char *str, size_t size) {
   return lua_gettop(L) - top;
 }
 
-EM_ASYNC_JS(char *, file_download, (char *path), {
-  try {
-    const count = await Module.interop.downloadFiles(UTF8ToString(path));
-    return stringToNewUTF8("1" + count);
-  } catch (e) {
-    console.error(e);
-    return stringToNewUTF8("0" + e.toString());
-  }
-})
-
 EM_ASYNC_JS(char *, clipboard_set, (const char* str), {
   Module.clipboardText = UTF8ToString(str);
   try {
@@ -105,15 +95,21 @@ static int f_upload_files(lua_State *L) {
 }
 
 static int f_download_files(lua_State *L) {
-  char *result = file_download((char *) luaL_checkstring(L, 1));
-  if (*result == '0') {
-    lua_pushnil(L);
-  } else {
-    lua_pushboolean(L, 1);
-  }
-  lua_pushstring(L, result + 1);
-  free(result);
-  return 2;
+  const char *path = luaL_checkstring(L, 1);
+
+  int promise_id = 0;
+  const char *err = EM_ASM_PTR({
+    try {
+      const promise = Module.interop.downloadFiles(UTF8ToString($0));
+      setValue($1, promise['id'], 'i32');
+      return 0;
+    } catch (err) {
+      return stringToNewUTF8(err.toString());
+    }
+  }, path);
+  if (err) return raise_em_error(L, err);
+  lua_pushinteger(L, promise_id);
+  return 1;
 }
 
 static int f_get_clipboard(lua_State *L) {

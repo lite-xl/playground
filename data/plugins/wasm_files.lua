@@ -101,6 +101,18 @@ function RootView:draw(...)
           status = status .. (#filename > (POPUP_WIDTH - #status) and ("..." .. filename:sub(-filename_len, -1)) or filename)
         end
       end
+    elseif operation.type == "download" then
+      if operation.error then
+        color, progress, status = style.error, 1, string.format("Error: %s", operation.error)
+      elseif operation.done then
+        color, progress, status = style.good, 1, "File / Directory downloaded."
+      else
+        color, progress = style.accent, operation.read / operation.total
+        status = string.format("(%s/%s): Zipping ", operation.read, operation.total)
+        local filename = operation.last or "files"
+        local filename_len = #filename > (POPUP_WIDTH - #status) and (POPUP_WIDTH - #status - 3) or filename
+        status = status .. (#filename > (POPUP_WIDTH - #status) and ("..." .. filename:sub(-filename_len, -1)) or filename)
+      end
     else
       color, status, progress = style.error, "Unknown type", 1
     end
@@ -166,12 +178,8 @@ command.add(nil, {
   ["wasm:download-file"] = function(path)
     local function download_file(path)
       local real_path = system.absolute_path(common.home_expand(path)) --[[@as string]]
-      local ok, err = wasm.download_files(real_path)
-      if ok then
-        core.log("downloaded %s", path)
-      else
-        core.error("cannot download %s: %s", path, err)
-      end
+      wasm.download_files(real_path)
+      monitor_promises()
     end
 
     if path ~= nil then
@@ -196,12 +204,8 @@ command.add(nil, {
   ["wasm:download-directory"] = function(path)
     local function download_directory(path)
       local real_path = system.absolute_path(common.home_expand(path)) --[[@as string]]
-      local ok, err = wasm.download_files(real_path)
-      if ok then
-        core.log("%s file(s) from %s are downloaded", err, path)
-      else
-        core.error("cannot download directory: %s", err)
-      end
+      wasm.download_files(real_path)
+      monitor_promises()
     end
 
     if path ~= nil then

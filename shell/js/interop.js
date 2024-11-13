@@ -87,10 +87,21 @@ export class Interop {
     if (this.#FS.isDir(this.#FS.stat(path).mode)) {
       return this.#downloadDirectory(path);
     } else {
-      return this.#downloadFile(
-        path.split("/").pop(),
-        this.#FS.readFile(path, { encoding: "binary" }),
-      );
+      const { promise, resolve, reject } = this.#createPromise('download');
+      promise["total"] = 1;
+      promise["read"] = 0;
+      try {
+        this.#downloadFile(
+          path.split("/").pop(),
+          this.#FS.readFile(path, { encoding: "binary" }),
+        );
+        promise["last"] = path;
+        promise["read"] = 1;
+        resolve(1);
+      } catch (err) {
+        reject(err);
+      }
+      return promise;
     }
   }
 
@@ -116,11 +127,12 @@ export class Interop {
    * @param {string} directory
    */
   #downloadDirectory(directory) {
+    const { promise, resolve, reject } = this.#createPromise('download');
+
     const filename = directory.split("/").pop() ?? "";
     const dirname = this.#dirname(directory);
-
-    const zipFile = new ZipFile();
     const stack = [directory];
+    const output = []
     while (stack.length) {
       const item = stack.pop();
       const relPath = item.slice(dirname.length);
@@ -133,22 +145,43 @@ export class Interop {
         if (paths.length) {
           stack.push(...paths);
         } else {
-          zipFile.addDirectory(relPath, stat.mtime);
+          output.push({ dir: true, path: relPath, mtime: stat.mtime });
         }
       }
       if (this.#FS.isFile(stat.mode)) {
-        zipFile.addFile(
-          relPath,
-          this.#FS.readFile(item, { encoding: "binary" }),
-          stat.mtime,
-        );
+        output.push({ dir: false, path: relPath, file: item, mtime: stat.mtime });
       }
     }
+    promise["total"] = output.length;
+    promise["read"] = 0;
 
-    return this.#downloadFile(
-      `${filename === "" ? "root" : filename}.zip`,
-      zipFile.finalize(),
-    );
+    const zipFile = new ZipFile();
+    const chunkify = index => {
+      try {
+        const end = Math.min(output.length, index + UPLOAD_CHUNK_SIZE);
+        for (let i = index; i < end; i++) {
+          if (output[i].dir) {
+            zipFile.addDirectory(output[i].path, output[i].mtime);
+          } else {
+            zipFile.addFile(output[i].path, this.#FS.readFile(output[i].file, { encoding: 'binary' }), output[i].mtime);
+          }
+          promise["read"]++;
+          promise["last"] = output[i].file ?? output[i].path;
+        }
+        this.#notifyPromisesUpdate(promise["id"]);
+      } catch (e) {
+        reject(e);
+      }
+      if (index + UPLOAD_CHUNK_SIZE >= output.length) {
+        this.#downloadFile(`${filename === "" ? "root" : filename}.zip`, zipFile.finalize());
+        resolve(output.length);
+      } else {
+        setTimeout(chunkify, 0, index + UPLOAD_CHUNK_SIZE);
+      }
+    }
+    chunkify(0);
+
+    return promise;
   }
 
   //#region C Promises Interface
