@@ -100,9 +100,20 @@ if get_option('wasm_debug') == 'sourcemap'
         install_dir: lite_bindir,
     )
 
+
+    sourcemap_fixer_args = [
+        sourcemap_fixer_exe,
+        '@OUTPUT0@',
+    ]
+    if get_option('wasm_sourcemap_base') != ''
+        sourcemap_fixer_args += get_option('wasm_sourcemap_base') / meson.current_build_dir()
+    else
+        sourcemap_fixer_args += ''
+    endif
+
     custom_target(
         'lite-xl.wasm.map',
-        command: [sourcemap_fixer_exe, '@OUTPUT0@', get_option('wasm_sourcemap_base')],
+        command: sourcemap_fixer_args,
         input: 'meson.build',
         output: 'lite-xl.wasm.map',
         depends: [lite_exe],
