@@ -59,6 +59,7 @@ export class Interop {
               const filePath = `${path}/${file.webkitRelativePath ? file.webkitRelativePath : file.name}`;
               await this.#writeFile(file, filePath);
               promise["read"]++;
+              promise["last"] = filePath;
             }),
           );
           this.#notifyPromisesUpdate(promise["id"]);
