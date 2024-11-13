@@ -27,15 +27,13 @@ dest_dir=github-pages
 
 if [[ ! -d "$build_dir" ]]; then
     args=(
+        '--cross-file' 'resources/cross/unknown-wasm32.txt'
         '-Dwasm_preload_files=false'
         '-Dwasm_build_bundle=true'
+        "-Dwasm_debug=${WASM_DEBUG:-none}"
+        "-Dwasm_sourcemap_base=${WASM_SOURCEMAP_BASE}"
     )
-    if [[ "$PRODUCTION" = "true" ]]; then
-        args+=('-Dwasm_debug=sourcemap')
-    else
-        args+=('-Dwasm_debug=dwarf')
-    fi
-    meson setup "$build_dir" --cross-file resources/cross/unknown-wasm32.txt "${args[@]}"
+    meson setup "$build_dir" "${args[@]}"
 fi
 
 ninja -C "$build_dir" $1

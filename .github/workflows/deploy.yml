@@ -57,6 +57,7 @@ jobs:
           context: .
           push: true
           tags: ${{ env.REGISTRY }}/${{ steps.repo_name.outputs.lowercase }}:latest
+          build-args: WASM_DEBUG=sourcemap,WASM_SOURCEMAP_BASE=/playground
           # Export both as a container image and in the out directory
           outputs: |
             type=docker

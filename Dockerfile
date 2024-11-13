@@ -13,7 +13,8 @@ ADD https://github.com/lite-xl/lite-xl-plugin-manager/releases/download/v${LPM_V
 
 FROM emscripten/emsdk:3.1.70 AS build
 
-ARG PRODUCTION=true
+ARG WASM_DEBUG=sourcemap
+ARG WASM_SOURCEMAP_BASE
 
 RUN --mount=from=src,target=/src <<EOF
 mkdir -p /esbuild
@@ -32,7 +33,7 @@ WORKDIR /build
 
 COPY --chown=emscripten . .
 
-RUN PRODUCTION=${PRODUCTION} bash scripts/gh-pages-deploy.sh
+RUN WASM_DEBUG="${WASM_DEBUG}" WASM_SOURCEMAP_BASE="${WASM_SOURCEMAP_BASE}" bash scripts/gh-pages-deploy.sh
 
 FROM p3terx/darkhttpd:latest
 

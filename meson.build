@@ -98,6 +98,9 @@ elif host_machine.system() == 'emscripten'
         lite_link_args += '-g'
         if get_option('wasm_debug') == 'sourcemap'
             lite_link_args += ['-gsource-map']
+            if get_option('wasm_sourcemap_base') != ''
+                lite_link_args += ['--source-map-base', get_option('wasm_sourcemap_base')]
+            endif
         endif
     endif
     if get_option('wasm_asyncify_advise')
