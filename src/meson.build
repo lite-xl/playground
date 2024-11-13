@@ -87,6 +87,7 @@ lite_exe = executable('lite-xl',
 )
 
 if get_option('wasm_debug') == 'sourcemap'
+    python_exe = find_program('python3', 'python')
     emstrip_exe = find_program('emstrip')
     custom_target(
         'lite-xl-stripped',
@@ -101,7 +102,7 @@ if get_option('wasm_debug') == 'sourcemap'
 
     custom_target(
         'lite-xl.wasm.map',
-        command: [emstrip_exe, '--version'],
+        command: [sourcemap_fixer_exe, '@OUTPUT0@', get_option('wasm_sourcemap_base')],
         input: 'meson.build',
         output: 'lite-xl.wasm.map',
         depends: [lite_exe],
