@@ -106,7 +106,8 @@ if get_option('wasm_debug') == 'sourcemap'
         '@OUTPUT0@',
     ]
     if get_option('wasm_sourcemap_base') != ''
-        sourcemap_fixer_args += get_option('wasm_sourcemap_base') / meson.current_build_dir()
+        # used to work around ../.. in the generated sourcemaps
+        sourcemap_fixer_args += get_option('wasm_sourcemap_base') / 'a/b'
     else
         sourcemap_fixer_args += ''
     endif
