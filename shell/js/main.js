@@ -1,7 +1,6 @@
 import AssetModuleFactory from "asset-loader";
 import LiteXLFactory from "lite-xl";
-
-import { Interop } from "./interop";
+import { $ } from "./utils";
 
 /**
  * Shows one of the overlays.
@@ -13,16 +12,16 @@ function showOverlay(overlayName) {
     .forEach(
       (el) => (el.style.display = el.id === overlayName ? "block" : "none"),
     );
-  document.getElementById("overlay").style.display = "block";
-  document.getElementById("canvas").style.display = "none";
+  $("#overlay").style.display = "block";
+  $("#canvas").style.display = "none";
 }
 
 /**
  * Hides all overlays.
  */
 function hideOverlay() {
-  document.getElementById("overlay").style.display = "none";
-  document.getElementById("canvas").style.display = "block";
+  $("#overlay").style.display = "none";
+  $("#canvas").style.display = "block";
 }
 
 /**
@@ -33,7 +32,7 @@ function hideOverlay() {
 function handleError(module, e) {
   const text = e?.message || e?.reason || e?.toString() || "Unknown error";
   if (started) {
-    document.getElementById("exit_status").textContent = text;
+    $("#exit_status").textContent = text;
     showOverlay("exit_error");
   } else {
     module.setStatus(text);
@@ -49,36 +48,33 @@ const Module = AssetModuleFactory({});
 Module.preRun = Module.preRun ?? [];
 
 // add preRun functions to mount fs
-Module.preRun.push(
-  (module) => {
-    const { addRunDependency, removeRunDependency, FS, IDBFS, ENV } = module;
-    ENV["LITE_SCALE"] = window.devicePixelRatio.toString();
+Module.preRun.push((module) => {
+  const { addRunDependency, removeRunDependency, FS, IDBFS, ENV } = module;
+  ENV["LITE_SCALE"] = window.devicePixelRatio.toString();
 
-    // mount and sync IDBFS
-    addRunDependency("mountHome");
-    ["/home", "/home/web_user"].forEach((p) => {
-      try {
-        FS.mkdir(p);
-      } catch (err) {}
-    });
-    module.setStatus("Mounting home directory...");
-    FS.mount(IDBFS, { autoPersist: true }, "/home/web_user");
-    FS.syncfs(true, function (err) {
-      if (err) {
-        console.error("cannot sync IDBFS():", err);
-      } else {
-        FS.chdir("/home/web_user");
-      }
-      removeRunDependency("mountHome");
-    });
-  },
-  (module) => (module.interop = new Interop(module.FS)),
-);
+  // mount and sync IDBFS
+  addRunDependency("mountHome");
+  ["/home", "/home/web_user"].forEach((p) => {
+    try {
+      FS.mkdir(p);
+    } catch (err) {}
+  });
+  module.setStatus("Mounting home directory...");
+  FS.mount(IDBFS, { autoPersist: true }, "/home/web_user");
+  FS.syncfs(true, function (err) {
+    if (err) {
+      console.error("cannot sync IDBFS():", err);
+    } else {
+      FS.chdir("/home/web_user");
+    }
+    removeRunDependency("mountHome");
+  });
+});
 
 Module.onRuntimeInitialized = () => {
   started = true;
   hideOverlay();
-  document.getElementById("canvas").oncontextmenu = (e) => e.preventDefault();
+  $("#canvas").oncontextmenu = (e) => e.preventDefault();
 };
 
 // attach something to handle Lite XL quitting
@@ -86,8 +82,7 @@ Module.onExit = (status) => {
   if (status === 0) {
     showOverlay("exit");
   } else {
-    document.getElementById("exit_status").textContent =
-      `Program exited with status ${status}`;
+    $("#exit_status").textContent = `Program exited with status ${status}`;
     showOverlay("exit_error");
   }
 };
@@ -114,11 +109,11 @@ function addInput(e) {
 // attach canvas to module
 window.addEventListener("load", () => {
   showOverlay("loading");
-  Module["canvas"] = document.getElementById("canvas");
+  Module["canvas"] = $("#canvas");
 
   // hook up our text input
-  const textInput = document.getElementById("textinput");
-  const status = document.getElementById("status");
+  const textInput = $("#textinput");
+  const status = $("#status");
   Module["setStatus"] = (s) => (status.textContent = s ?? "Initializing...");
 
   // ignore composition text, only get end result

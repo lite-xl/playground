@@ -1,4 +1,3 @@
-const ZIP_POLY = 0x04c11db7;
 const ZIP_LOCAL_MAGIC = 0x04034b50;
 const ZIP_CENTRAL_MAGIC = 0x02014b50;
 const ZIP_EOCD_MAGIC = 0x06054b50;
@@ -10,6 +9,15 @@ const ZIP_CENTRAL_HEADER_SIZE = 46;
 const ZIP_EOCD_SIZE = 22;
 
 /**
+ * Content reading callback.
+ * @callback ContentReaderCallback
+ * @param {Uint8Array} buffer the buffer to read into
+ * @param {number} offset the offset to read into
+ * @param {length} length the number of bytes to read
+ * @returns {number} number of bytes read
+ */
+
+/**
  * Simple ZIP file writer.
  */
 export class ZipFile {
@@ -17,41 +25,42 @@ export class ZipFile {
   #entries = [];
   #output = [];
   #offset = 0;
-  #CRC32_LOOKUP = [];
+  #CRC32_LOOKUP = new Int32Array(256);
 
   /**
    * Creates a ZIP file writer.
    */
   constructor() {
     // seed the crc lookup table
-    for (let i = 0; i <= 0xff; i++) {
+    for (let i = 0; i <= 256; i++) {
       let crc = i;
       for (let j = 0; j < 8; j++) {
-        crc = (crc >> 1) ^ (-(crc & 1) & ZIP_POLY);
+        crc = (crc & 1 && -306674912) ^ (crc >>> 1);
       }
       this.#CRC32_LOOKUP[i] = crc;
     }
   }
 
   /**
-   * Adds a directory to the ZIP file.
-   * This is not needed for non-empty directories.
-   * @param {string} path file path
-   * @param {ArrayBufferLike?} content file content
-   * @param {Date?} modTime file modification time
+   * Adds a file into the ZIP file.
+   * @param {string} path file path in ZIP file
+   * @param {Uint8Array[]} content ZIP file content
+   * @param {Date} modTime modification time of the file
    */
-  addFile(path, content, modTime) {
+  async addFile(path, content, modTime) {
     modTime = modTime ?? new Date();
+    content = Array.isArray(content) ? content : content ? [content] : [];
     const encodedPath = this.#encoder.encode(path);
-    const [dosTime, dosDate] = this.dostime(modTime);
-    const crc32 = content ? this.crc32(content, 0) : 0;
+    const [dosTime, dosDate] = this.#dostime(modTime);
+    const crc32 = content.reduce((prev, data) => this.#crc32(data, prev), 0);
+    const size = content.reduce((prev, data) => prev + data.byteLength, 0);
     const entry = {
       encodedPath,
       dosTime,
       dosDate,
       crc32,
+      size,
       offset: this.#offset,
-      size: content ? content.byteLength : 0,
     };
     const header = new DataView(new ArrayBuffer(ZIP_LOCAL_HEADER_SIZE));
     const writeLE16 = (offset, data) => header.setUint16(offset, data, true);
@@ -63,14 +72,13 @@ export class ZipFile {
     writeLE16(10, dosTime);
     writeLE16(12, dosDate);
     writeLE32(14, crc32);
-    writeLE32(18, content ? content.byteLength : 0);
-    writeLE32(22, content ? content.byteLength : 0);
+    writeLE32(18, size);
+    writeLE32(22, size);
     writeLE16(26, encodedPath.byteLength);
     writeLE16(28, 0); // extra field length
-    this.#output.push(header.buffer, encodedPath);
-    if (content) this.#output.push(content);
+    this.#output.push(header, encodedPath, ...content);
     this.#entries.push(entry);
-    this.#offset += ZIP_LOCAL_HEADER_SIZE + encodedPath.byteLength + entry.size;
+    this.#offset += ZIP_LOCAL_HEADER_SIZE + encodedPath.byteLength + size;
   }
 
   /**
@@ -134,7 +142,7 @@ export class ZipFile {
    * @param {Date} date
    * @returns {[number, number]} DOS time followed by date
    */
-  dostime(date) {
+  #dostime(date) {
     let year, month, day, hour, minute, second;
     if (date.getFullYear() < 1980) {
       year = 1980;
@@ -161,13 +169,13 @@ export class ZipFile {
 
   /**
    * Calculates the CRC32 checksum.
-   * @param {ArrayBufferLike} data
-   * @param {*} previous
+   * @param {Uint8Array} data
+   * @param {number} previous
    */
-  crc32(data, previous) {
+  #crc32(data, previous) {
     let crc = ~previous;
     for (let i = 0; i < data.byteLength; i++) {
-      crc = (crc >> 8) ^ this.#CRC32_LOOKUP[(crc & 0xff) ^ data[i]];
+      crc = this.#CRC32_LOOKUP[(crc & 255) ^ data[i]] ^ (crc >>> 8);
     }
     return ~crc;
   }

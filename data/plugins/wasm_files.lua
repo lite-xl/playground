@@ -107,8 +107,8 @@ function RootView:draw(...)
       elseif operation.done then
         color, progress, status = style.good, 1, "File / Directory downloaded."
       else
-        color, progress = style.accent, operation.read / operation.total
-        status = string.format("(%s/%s): Zipping ", operation.read, operation.total)
+        color, progress = style.accent, 1
+        status = "Zipping "
         local filename = operation.last or "files"
         local filename_len = #filename > (POPUP_WIDTH - #status) and (POPUP_WIDTH - #status - 3) or filename
         status = status .. (#filename > (POPUP_WIDTH - #status) and ("..." .. filename:sub(-filename_len, -1)) or filename)

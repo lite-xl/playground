@@ -8,6 +8,17 @@
 #include <SDL.h>
 #include <emscripten.h>
 
+#define PROMISE_UPDATE_HANDLER "wasm_promise_update_handler"
+
+EMSCRIPTEN_KEEPALIVE
+int wasm_promise_update_handler(unsigned long promise_id) {
+  SDL_Event ev = { 0 };
+  ev.type = SDL_USEREVENT;
+  ev.user.timestamp = SDL_GetTicks();
+  SDL_PushEvent(&ev);
+  return 1;
+}
+
 static int deserialize(lua_State *L, const char *str, size_t size) {
   int top = lua_gettop(L);
   if (luaL_loadbuffer(L, str, size, str) || lua_pcall(L, 0, LUA_MULTRET, 0)) {
@@ -53,7 +64,7 @@ static int f_get_promises(lua_State *L) {
   char *serialized = NULL;
   const char *err = EM_ASM_PTR({
     try {
-      const promises = Module.interop.getPromisesSerialized($0 ? UTF8ToString($0) : undefined);
+      const promises = Module.promises.getPromisesSerialized($0 ? UTF8ToString($0) : undefined);
       const buf = stringToNewUTF8(promises);
       setValue($1, buf, '*');
       setValue($2, promises.length, 'i32');
@@ -81,7 +92,7 @@ static int f_upload_files(lua_State *L) {
   int promise_id = 0;
   const char *err = (const char *) EM_ASM_PTR({
     try {
-      const promise = Module.interop.uploadFiles(UTF8ToString($0), $1);
+      const promise = uploadFiles(Module.promises, FS, UTF8ToString($0), $1);
       setValue($2, promise['id'], 'i32');
     } catch (err) {
       console.trace(err);
@@ -100,7 +111,7 @@ static int f_download_files(lua_State *L) {
   int promise_id = 0;
   const char *err = EM_ASM_PTR({
     try {
-      const promise = Module.interop.downloadFiles(UTF8ToString($0));
+      const promise = downloadFiles(Module.promises, FS, UTF8ToString($0));
       setValue($1, promise['id'], 'i32');
       return 0;
     } catch (err) {
@@ -150,10 +161,11 @@ static int f_set_text_input_rect(lua_State *L) {
   lua_Number h = luaL_checknumber(L, 4);
   EM_ASM({
     const el = document.getElementById("textinput");
-    el.style.left = ($0 / window.devicePixelRatio) + "px";
-    el.style.top = ($1 / window.devicePixelRatio) + "px";
-    el.style.width = ($2 / window.devicePixelRatio) + "px";
-    el.style.height = ($3 / window.devicePixelRatio) + "px";
+    const scale = window.devicePixelRatio;
+    el.style.left = `${$0 / scale}px`;
+    el.style.top = `${$1 / scale}px`;
+    el.style.width = `${$2 / scale}px`;
+    el.style.height = `${$3 / scale}px`;
   }, x, y, w, h);
   return 0;
 }
@@ -170,6 +182,7 @@ static luaL_Reg lib[] = {
 };
 
 int luaopen_wasm(lua_State* L) {
+  EM_ASM(Module.promises = new PromiseRegistry(Module.cwrap(UTF8ToString($0))), PROMISE_UPDATE_HANDLER);
   luaL_newlib(L, lib);
   return 1;
 }

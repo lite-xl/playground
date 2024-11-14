@@ -1,196 +1,176 @@
 import { ZipFile } from "./zipfile";
+import { readFile, writeFile, dirname } from "./utils";
 
 /**
- * Number of conccurent uploads to run.
- * Keep this small.
+ * The number of files that must be processed before progress is reported.
  */
-const UPLOAD_CHUNK_SIZE = 5;
+const PROGRESS_REPORT_SIZE = 10;
 
 /**
- * @callback UploadProgressCallback
- * @param {number} items number of items uploaded
- * @param {number} remaining number of items remaining
+ * Prompts the user to upload a file or directory.
+ * @param {PromiseRegistry} promiseRegistry the promise registry.
+ * @param {object} FS the filesystem object.
+ * @param {string} path destination path.
+ * @param {boolean} uploadDirectory whether to upload a file or directory.
  */
+export function uploadFiles(promiseRegistry, FS, path, uploadDirectory) {
+  const {
+    promise,
+    resolve: res,
+    reject: rej,
+  } = promiseRegistry.createPromise("upload");
+  promise["status"] = "pending";
+  promise["read"] = 0;
+  promise["total"] = 0;
 
-/**
- * Allows interop between C and JS.
- */
-export class Interop {
-  #FS;
-  #promiseRegistryCounter = 1;
-  #promiseRegistry = new Map();
-  #perFrameInhibit = false;
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.webkitdirectory = uploadDirectory;
+  fileInput.addEventListener("change", async () => {
+    promise["status"] = "selected";
+    promise["total"] = fileInput.files.length;
 
-  constructor(FS) {
-    this.#FS = FS;
-  }
-
-  /**
-   * Prompts the user to upload a file or directory.
-   * @param {string} path destination path.
-   * @param {boolean} uploadDirectory whether to upload a file or directory.
-   */
-  uploadFiles(path, uploadDirectory) {
-    const {
-      promise,
-      resolve: res,
-      reject: rej,
-    } = this.#createPromise("upload");
-    promise["status"] = "pending";
-    promise["read"] = 0;
-    promise["total"] = 0;
-
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.webkitdirectory = uploadDirectory;
-    fileInput.addEventListener("change", async () => {
-      promise["status"] = "selected";
-      promise["total"] = fileInput.files.length;
-
-      try {
-        for (let i = 0; i < fileInput.files.length; i += UPLOAD_CHUNK_SIZE) {
-          const chunk = Array.prototype.slice.call(
-            fileInput.files,
-            i,
-            i + UPLOAD_CHUNK_SIZE,
-          );
-          await Promise.all(
-            chunk.map(async (file) => {
-              const filePath = `${path}/${file.webkitRelativePath ? file.webkitRelativePath : file.name}`;
-              await this.#writeFile(file, filePath);
-              promise["read"]++;
-              promise["last"] = filePath;
-            }),
-          );
-          this.#notifyPromisesUpdate(promise["id"]);
-        }
-        res(fileInput.files.length);
-      } catch (err) {
-        rej(err);
+    try {
+      let i = 0;
+      for (const file of fileInput.files) {
+        const filePath = `${path}/${file.webkitRelativePath ? file.webkitRelativePath : file.name}`;
+        await writeFile(FS, file, filePath);
+        promise["read"]++;
+        promise["last"] = filePath;
+        if (++i % PROGRESS_REPORT_SIZE === 0)
+          promiseRegistry.notifyPromisesUpdate(promise["id"]);
       }
-    });
-    
-    fileInput.addEventListener("cancel", () => {
-      promise["status"] = "canceled";
-      res(0);
-    });
-    fileInput.click();
-
-    return promise;
-  }
-
-  /**
-   * Downloads a path.
-   * @param {string} path the path to download
-   */
-  downloadFiles(path) {
-    if (this.#FS.isDir(this.#FS.stat(path).mode)) {
-      return this.#downloadDirectory(path);
-    } else {
-      const { promise, resolve, reject } = this.#createPromise('download');
-      promise["total"] = 1;
-      promise["read"] = 0;
-      try {
-        this.#downloadFile(
-          path.split("/").pop(),
-          this.#FS.readFile(path, { encoding: "binary" }),
-        );
-        promise["last"] = path;
-        promise["read"] = 1;
-        resolve(1);
-      } catch (err) {
-        reject(err);
-      }
-      return promise;
+      res(fileInput.files.length);
+    } catch (err) {
+      rej(err);
     }
+  });
+
+  fileInput.addEventListener("cancel", () => {
+    promise["status"] = "canceled";
+    res(0);
+  });
+  fileInput.click();
+
+  return promise;
+}
+
+/**
+ * Downloads a path.
+ * @param {PromiseRegistry} promiseRegistry the promise registry
+ * @param {object} FS the emscripten filesystem
+ * @param {string} path the path to download
+ */
+export function downloadFiles(promiseRegistry, FS, path) {
+  const { promise, resolve, reject } =
+    promiseRegistry.createPromise("download");
+  promise["read"] = 0;
+
+  if (FS.isDir(FS.stat(path).mode)) {
+    downloadDirectory(FS, path, (read, last) => {
+      promise["read"] = read;
+      promise["last"] = last;
+    }).then(resolve, reject);
+  } else {
+    readFile(FS, path)
+      .then((content) => {
+        downloadFile(path.split("/").pop(), content);
+        promise["read"] = 1;
+        promise["last"] = path;
+        resolve(1);
+      })
+      .catch(reject);
   }
+  return promise;
+}
 
-  /**
-   * Creates a download for the user.
-   * @param {string} filename download filename.
-   * @param {*} content file content.
-   */
-  #downloadFile(filename, content) {
-    const a = document.createElement("a");
-    const blob = new Blob(Array.isArray(content) ? content : [content], {
-      type: "application/octet-stream",
-    });
-    const url = URL.createObjectURL(blob);
-    a.href = url;
-    a.download = filename;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 60000); // remove after 1 minute
-  }
+/**
+ * Creates a download for the user.
+ * @param {string} filename download filename.
+ * @param {*} content file content.
+ */
+function downloadFile(filename, content) {
+  const a = document.createElement("a");
+  const blob = new Blob(Array.isArray(content) ? content : [content], {
+    type: "application/octet-stream",
+  });
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 60000); // remove after 1 minute
+}
 
-  /**
-   * Downloads a directory as a ZIP file.
-   * @param {string} directory
-   */
-  #downloadDirectory(directory) {
-    const { promise, resolve, reject } = this.#createPromise('download');
+/**
+ * @callback DownloadProgressCallback
+ * @param {number} items number of items downloaded
+ */
 
-    const filename = directory.split("/").pop() ?? "";
-    const dirname = this.#dirname(directory);
-    const stack = [directory];
-    const output = []
-    while (stack.length) {
-      const item = stack.pop();
-      const relPath = item.slice(dirname.length);
-      const stat = this.#FS.stat(item);
-      if (this.#FS.isDir(stat.mode)) {
-        const paths = this.#FS
-          .readdir(item)
+/**
+ * Downloads a directory as a ZIP file.
+ * @param {object} FS emscripten filesystem
+ * @param {string} directory
+ * @param {DownloadProgressCallback} progressCallback
+ */
+async function downloadDirectory(FS, directory, progressCallback) {
+  const filename = directory.split("/").pop() ?? "";
+  const dir = dirname(directory);
+
+  const zipFile = new ZipFile();
+  const stack = [directory];
+  let numFiles = 0;
+  while (stack.length) {
+    const item = stack.pop();
+    const relPath = item.slice(dir.length + 1);
+    try {
+      const stat = FS.stat(item);
+      if (FS.isDir(stat.mode)) {
+        const paths = FS.readdir(item)
           .filter((d) => d !== "." && d !== "..")
           .map((d) => `${item}/${d}`);
         if (paths.length) {
           stack.push(...paths);
         } else {
-          output.push({ dir: true, path: relPath, mtime: stat.mtime });
+          zipFile.addDirectory(relPath, stat.mtime);
         }
       }
-      if (this.#FS.isFile(stat.mode)) {
-        output.push({ dir: false, path: relPath, file: item, mtime: stat.mtime });
+      if (FS.isFile(stat.mode)) {
+        const content = await readFile(FS, item, stat);
+        zipFile.addFile(relPath, content, stat.mtime);
+        if (++numFiles % PROGRESS_REPORT_SIZE === 0)
+          progressCallback(numFiles, item);
       }
+    } catch (err) {
+      console.warn(`Failed to process ${item}: ${err}`);
     }
-    promise["total"] = output.length;
-    promise["read"] = 0;
+  }
+  downloadFile(
+    `${filename === "" ? "root" : filename}.zip`,
+    zipFile.finalize(),
+  );
+  return numFiles;
+}
 
-    const zipFile = new ZipFile();
-    const chunkify = index => {
-      try {
-        const end = Math.min(output.length, index + UPLOAD_CHUNK_SIZE);
-        for (let i = index; i < end; i++) {
-          if (output[i].dir) {
-            zipFile.addDirectory(output[i].path, output[i].mtime);
-          } else {
-            zipFile.addFile(output[i].path, this.#FS.readFile(output[i].file, { encoding: 'binary' }), output[i].mtime);
-          }
-          promise["read"]++;
-          promise["last"] = output[i].file ?? output[i].path;
-        }
-        this.#notifyPromisesUpdate(promise["id"]);
-      } catch (e) {
-        reject(e);
-      }
-      if (index + UPLOAD_CHUNK_SIZE >= output.length) {
-        this.#downloadFile(`${filename === "" ? "root" : filename}.zip`, zipFile.finalize());
-        resolve(output.length);
-      } else {
-        setTimeout(chunkify, 0, index + UPLOAD_CHUNK_SIZE);
-      }
-    }
-    chunkify(0);
+//#region Promise Registry
+/**
+ * Allows interop between C and JS.
+ */
+export class PromiseRegistry {
+  #promiseHandler;
+  #perFrameInhibit;
+  #promiseRegistryCounter = 1;
+  #promiseRegistry = new Map();
 
-    return promise;
+  constructor(promiseHandler) {
+    this.#promiseHandler = promiseHandler;
   }
 
-  //#region C Promises Interface
   /**
    * Creates a promise.
    * @param {string?} type the type of promise
    * @returns {{promise: Promise, resolve: Function, reject: Function }}
    */
-  #createPromise(type) {
+  createPromise(type) {
     let resolve, reject;
     const id = this.#promiseRegistryCounter++;
     const promise = new Promise((res, rej) => {
@@ -199,18 +179,33 @@ export class Interop {
     })
       .then(() => {
         promise["done"] = true;
-        this.#notifyPromisesUpdate(promise["id"]);
+        setTimeout(() => this.notifyPromisesUpdate(promise["id"]), 0);
       })
       .catch((error) => {
         promise["done"] = true;
         promise["error"] = error;
-        this.#notifyPromisesUpdate(promise["id"]);
+        setTimeout(() => this.notifyPromisesUpdate(promise["id"]), 0);
         throw error;
       });
     promise["id"] = id;
     promise["type"] = type;
     this.#promiseRegistry.set(id, promise);
     return { promise, resolve, reject };
+  }
+
+  /**
+   * Notifies the WASM side that a promise is updated, and they should check it out.
+   * @param {number?} id a promise ID as a hint
+   */
+  notifyPromisesUpdate(id) {
+    if (!this.#perFrameInhibit) {
+      this.#promiseHandler(id ?? 0);
+      // to prevent spamming this handler, we only allow it to fire once per event loop iteration
+      this.#perFrameInhibit = setTimeout(
+        () => (this.#perFrameInhibit = undefined),
+        0,
+      );
+    }
   }
 
   /**
@@ -221,7 +216,6 @@ export class Interop {
   getPromisesSerialized(type) {
     return this.#serialize(this.#getPromises(type));
   }
-
 
   /**
    * Gets running / completed promises.
@@ -236,55 +230,6 @@ export class Interop {
     }
     return output;
   }
-
-  /**
-   * Notifies the WASM side that a promise is updated, and they should check it out.
-   * @param {number?} id a promise ID as a hint
-   */
-  #notifyPromisesUpdate(id) {
-    if (!this.#perFrameInhibit) {
-      // wake up SDL
-      const event = new FocusEvent("focusin");
-      window.dispatchEvent(event);
-      // to prevent spamming this handler, we only allow it to fire once per event loop iteration
-      this.#perFrameInhibit = setTimeout(() => {
-        this.#perFrameInhibit = undefined;
-      }, 0);
-    }
-  }
-  //#endregion
-
-  //#region File IO
-  /**
-   * Writes a file to the filesystem.
-   * @param {File} file the file to read.
-   * @param {string} dest the destination path.
-   * @returns {Promise<void>}
-   */
-  #writeFile(file, dest) {
-    return new Promise((res, rej) => {
-      const reader = new FileReader();
-      reader.addEventListener("load", () => {
-        this.#FS.createPath("/", this.#dirname(dest), true, true);
-        this.#FS.writeFile(dest, new Uint8Array(reader.result));
-        res();
-      });
-      reader.addEventListener("error", () => rej(reader.error));
-      reader.readAsArrayBuffer(file);
-    });
-  }
-
-  /**
-   * Gets the directory of a path.
-   * @param {string} path the path.
-   * @returns
-   */
-  #dirname(path) {
-    const segments = path.split("/").slice(0, -1);
-    if (segments.length === 1) return "/";
-    return segments.join("/");
-  }
-  //#endregion
 
   //#region Serialization
   /**
@@ -385,3 +330,4 @@ export class Interop {
   }
   //#endregion
 }
+//#endregion
