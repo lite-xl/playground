@@ -90,6 +90,8 @@ jobs:
   build-cosmo-exe:
     runs-on: ubuntu-latest
     needs: build-push-image-and-publish
+    permissions:
+      contents: write
     steps:
       - name: Checkout cosmopolitan
         uses: actions/checkout@v4
