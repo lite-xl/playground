@@ -104,7 +104,9 @@ jobs:
 
       - name: Build redbean
         run: |
-          make -j$(nproc) o//tool/net/redbean
+          sudo cp build/bootstrap/ape.elf /usr/bin/ape
+          sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+          make -j$(nproc) o//tool/net/redbean MODE=tiny
           mv o//tool/net/redbean lite-xl-playground.com
 
       - name: Build cosmopolitan executable
