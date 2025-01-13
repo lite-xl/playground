@@ -121,6 +121,8 @@ jobs:
       - name: Release
         uses: ncipollo/release-action@v1
         with:
+          tag: latest
+          commit: ${{ github.sha }}
           artifacts: lite-xl-playground.com
           prerelease: true
           generateReleaseNotes: true
