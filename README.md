@@ -23,6 +23,14 @@ The specific dependencies may be mentioned in the Dockerfile.
 
 You can find specific documentation in each subfolder.
 
+## Fun Cosmopolitan Stuff
+
+There is a build of [redbean](https://redbean.dev) that has the playground bundled,
+making the playground runnable on almost all platforms with a single binary.
+You can find the binary at the [Releases](https://github.com/lite-xl/playground/releases/tag/latest).
+
+Follow the instructions at [redbean](https://redbean.dev) to set up and run the executable correctly.
+
 ## Debug Info
 
 By default, running `bash scripts/gh-pages-deploy.sh` will generate DWARF debug info
@@ -161,7 +169,7 @@ We provide DMG files for macOS. Simply drag the program into your Applications f
 > the [macOS User Guide](https://support.apple.com/en-my/guide/mac-help/mh40616/mac).
 >
 > On an older version of Lite XL, you will need to run these commands instead:
-> 
+>
 > ```sh
 > # clears attributes from the directory
 > xattr -cr /Applications/Lite\ XL.app
