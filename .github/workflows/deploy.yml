@@ -114,10 +114,10 @@ jobs:
       - name: Build cosmopolitan executable
         run: |
           cd github-pages
-          tar -xvf github-pages.tar
+          tar -xf github-pages.tar
           rm -rf subprojects github-pages.tar
           echo "LaunchBrowser()" > .init.lua
-          zip -ur ../lite-xl-playground.com ./
+          zip -9ur ../lite-xl-playground.com ./
 
       - name: Release
         uses: ncipollo/release-action@v1
@@ -126,4 +126,5 @@ jobs:
           commit: ${{ github.sha }}
           artifacts: lite-xl-playground.com
           prerelease: true
+          allowUpdates: true
           generateReleaseNotes: true
