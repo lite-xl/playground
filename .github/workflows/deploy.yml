@@ -86,3 +86,36 @@ jobs:
         id: deployment
         if: ${{ github.event.inputs.deploy == 'true' }}
         uses: actions/deploy-pages@v4
+
+  build-cosmo-exe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout cosmopolitan
+        uses: actions/checkout@v4
+        with:
+          repository: jart/cosmopolitan
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: github-pages
+
+      - name: Build redbean
+        run: |
+          make -j$(nproc) o//tool/net/redbean
+          mv o//tool/net/redbean lite-xl-playground.com
+
+      - name: Build cosmopolitan executable
+        run: |
+          cd github-pages
+          rm -rf subprojects
+          echo "LaunchBrowser()" > .init.lua
+          zip -ur ../lite-xl-playground.com ./
+
+      - name: Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: lite-xl-playground.com
+          prerelease: true
+          generateReleaseNotes: true
