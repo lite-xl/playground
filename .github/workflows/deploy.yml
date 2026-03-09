@@ -35,10 +35,10 @@ jobs:
       id-token: write
     steps:
       - name: Checkout this repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Log in to the Container registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -52,7 +52,7 @@ jobs:
 
       - name: Build and push Docker image
         id: push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -66,7 +66,7 @@ jobs:
             out
 
       - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: ${{ env.REGISTRY }}/${{ steps.repo_name.outputs.lowercase }}
           subject-digest: ${{ steps.push.outputs.digest }}
@@ -76,7 +76,7 @@ jobs:
         run: tar --dereference --hard-dereference -cf github-pages.tar --directory out/www .
 
       - name: Upload pages artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: github-pages
           path: github-pages.tar
@@ -94,12 +94,12 @@ jobs:
       contents: write
     steps:
       - name: Checkout cosmopolitan
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: jart/cosmopolitan
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: github-pages
           path: github-pages
